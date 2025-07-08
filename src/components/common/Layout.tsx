@@ -11,7 +11,7 @@ import {
   User,
   Heart,
   Menu,
-  X
+  X,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -68,8 +68,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
   const navigationItems = getNavigationItems();
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Backdrop mobile */}
+    <div className="h-screen w-screen flex overflow-hidden bg-gray-50">
+      {/* Backdrop pour mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black opacity-50 z-40 lg:hidden"
@@ -77,16 +77,17 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar responsive + scrollable */}
       <div
         className={`
           fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg border-r border-gray-200 transform
           transition-transform duration-200 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0 lg:static lg:inset-0
+          lg:translate-x-0 lg:static lg:inset-0 h-screen flex flex-col
         `}
       >
-        <div className="p-6 border-b border-gray-200">
+        {/* Logo / Haut */}
+        <div className="p-6 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-blue-600 rounded-lg">
               <Heart className="h-6 w-6 text-white" />
@@ -98,7 +99,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
           </div>
         </div>
 
-        <nav className="mt-6 px-4">
+        {/* Navigation scrollable */}
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPage === item.id;
@@ -110,7 +112,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
                   onNavigate(item.id);
                   setSidebarOpen(false);
                 }}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 mb-1 ${
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
                   isActive
                     ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
@@ -121,9 +123,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
               </button>
             );
           })}
-        </nav>
+        </div>
 
-        <div className="absolute bottom-0 left-0 right-0 w-64 p-4 border-t border-gray-200 bg-white">
+        {/* Profil + Déconnexion */}
+        <div className="p-4 border-t border-gray-200 flex-shrink-0">
           <div className="flex items-center space-x-3 mb-4">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
               <span className="text-white font-semibold text-sm">
@@ -150,8 +153,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Header */}
         <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-4 flex justify-between items-center lg:px-6">
           <div className="flex items-center space-x-3">
             <button
@@ -172,7 +176,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto bg-gray-50 p-6">
+        {/* Scrollable content */}
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
           {children}
         </main>
       </div>
