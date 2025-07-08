@@ -25,9 +25,9 @@ export const LoginForm: React.FC = () => {
   };
 
   const demoAccounts = [
-    { username: 'marie.dupont', role: 'Secrétaire', password: 'demo123' },
-    { username: 'sophie.martin', role: 'Infirmière', password: 'demo123' },
-    { username: 'dr.bernard', role: 'Médecin-Chef', password: 'demo123' }
+    { username: 'marie.RAZA', role: 'Secrétaire', password: 'demo123' },
+    { username: 'sophie.ZETY', role: 'Infirmière', password: 'demo123' },
+    { username: 'dr.MONJA', role: 'Médecin-Chef', password: 'demo123' }
   ];
 
   return (

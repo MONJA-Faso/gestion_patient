@@ -3,9 +3,9 @@ import { User, Patient, MedicalRecord, PregnancyRecord, MenstrualCycleRecord, Ch
 export const mockUsers: User[] = [
   {
     id: '1',
-    username: 'marie.dupont',
+    username: 'marie.RAZA',
     firstName: 'Marie',
-    lastName: 'Dupont',
+    lastName: 'RAZADRASOA',
     role: 'secretary',
     email: 'marie.dupont@medcare.fr',
     isActive: true,
@@ -13,9 +13,9 @@ export const mockUsers: User[] = [
   },
   {
     id: '2',
-    username: 'sophie.martin',
+    username: 'sophie.ZETY',
     firstName: 'Sophie',
-    lastName: 'Martin',
+    lastName: 'ZETY',
     role: 'nurse',
     email: 'sophie.martin@medcare.fr',
     isActive: true,
@@ -23,9 +23,9 @@ export const mockUsers: User[] = [
   },
   {
     id: '3',
-    username: 'dr.bernard',
-    firstName: 'Jean',
-    lastName: 'Bernard',
+    username: 'dr.MONJA',
+    firstName: 'MONJA',
+    lastName: 'Faso',
     role: 'doctor',
     email: 'jean.bernard@medcare.fr',
     isActive: true,

@@ -77,7 +77,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
               <Heart className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">MedCare</h1>
+              <h1 className="text-xl font-bold text-gray-900">FANANTENANA</h1>
               <p className="text-sm text-gray-500">Gestion Patients</p>
             </div>
           </div>
