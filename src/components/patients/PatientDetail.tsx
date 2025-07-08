@@ -215,19 +215,19 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
 
       {/* Navigation par onglets */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-100">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8 px-6">
+        <div className="border-b border-gray-200 overflow-x-auto">
+          <nav className="flex px-4 md:px-6 space-x-4 sm:space-x-6 lg:space-x-8 overflow-x-auto no-scrollbar">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               const isAccessible = tab.id === 'overview' || canAccessMedical;
-              
+
               return (
                 <button
                   key={tab.id}
                   onClick={() => isAccessible && setActiveTab(tab.id)}
                   disabled={!isAccessible}
-                  className={`flex items-center space-x-2 py-4 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                  className={`flex items-center whitespace-nowrap space-x-2 py-4 border-b-2 font-medium text-sm transition-colors duration-200 ${
                     isActive
                       ? 'border-blue-500 text-blue-600'
                       : isAccessible
@@ -235,13 +235,15 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                         : 'border-transparent text-gray-300 cursor-not-allowed'
                   }`}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-5 w-5 flex-shrink-0" />
                   <span>{tab.label}</span>
                 </button>
               );
             })}
           </nav>
         </div>
+
+
 
         {/* Contenu des onglets */}
         <div className="p-6">
