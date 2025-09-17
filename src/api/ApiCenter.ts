@@ -3,6 +3,7 @@ import { User, RegisterUserData, RegisterUserResponse } from "../types";
 
 
 export interface LoginResponse {
+    message: string;
     token: string;
     user: User;
 }

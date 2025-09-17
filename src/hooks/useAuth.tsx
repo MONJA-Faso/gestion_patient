@@ -34,12 +34,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     setIsLoading(true);
-    
+
     // Simulation d'authentification
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     const foundUser = mockUsers.find(u => u.username === username);
-    
+
     if (foundUser && foundUser.isActive) {
       // En production, vérifier le mot de passe hashé
       // Pour la démo, accepter n'importe quel mot de passe non vide
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return true;
       }
     }
-    
+
     setIsLoading(false);
     return false;
   };
