@@ -1,13 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { Heart, Eye, EyeOff, Lock, User } from 'lucide-react';
+import { loginUser } from '../../api/ApiCenter';
 
-export const LoginForm: React.FC = () => {
+interface LoginFormProps {
+  isRegister: boolean;
+  setIsRegister: (value: boolean) => void;
+}
+
+export const LoginForm: React.FC<LoginFormProps> = ({ isRegister, setIsRegister }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const { login, isLoading } = useAuth();
+  const { isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +24,9 @@ export const LoginForm: React.FC = () => {
       return;
     }
 
-    const success = await login(username, password);
+    const success = await loginUser(username, password);
+    console.log(success);
+    
     if (!success) {
       setError('Identifiants incorrects');
     }
@@ -29,6 +37,10 @@ export const LoginForm: React.FC = () => {
     { username: 'sophie.ZETY', role: 'Infirmière', password: 'demo123' },
     { username: 'dr.MONJA', role: 'Médecin-Chef', password: 'demo123' }
   ];
+
+  useEffect(() => {
+    console.log(isRegister);
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -107,6 +119,13 @@ export const LoginForm: React.FC = () => {
               )}
             </button>
           </form>
+          <div className='flex gap-3 justify-center mt-5'>
+            <div>Pas de compte ? </div>
+            <button
+              onClick={() => setIsRegister(!isRegister)}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >En Créer ...</button>
+          </div>
         </div>
 
         {/* Comptes de démonstration */}

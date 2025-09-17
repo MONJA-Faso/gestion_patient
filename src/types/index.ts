@@ -9,6 +9,21 @@ export interface User {
   createdAt: string;
 }
 
+export interface RegisterUserData {
+  username: string;
+  firstName: string;
+  lastName: string;
+  role: 'secretary' | 'nurse' | 'doctor';
+  email: string;
+  password: string;
+}
+
+export interface RegisterUserResponse {
+    user: User;
+    message: string;
+    token?: string;
+}
+
 export interface Patient {
   id: string;
   patientNumber: string;

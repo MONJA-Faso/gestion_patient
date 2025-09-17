@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { LoginForm } from './components/auth/LoginForm';
+import { RegisterForm } from './components/auth/RegisterForm';
 import { Layout } from './components/common/Layout';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { PatientList } from './components/patients/PatientList';
@@ -17,6 +18,8 @@ const AppContent: React.FC = () => {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [showAddPatient, setShowAddPatient] = useState(false);
 
+  const [isRegister, setIsRegister] = useState(false);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -29,7 +32,11 @@ const AppContent: React.FC = () => {
   }
 
   if (!user) {
-    return <LoginForm />;
+    if (!isRegister) {
+      return <LoginForm isRegister={isRegister} setIsRegister={setIsRegister}/>;
+    } else {
+      return <RegisterForm isRegister={isRegister} setIsRegister={setIsRegister} />;
+    }
   }
 
   const handlePatientSelect = (patientId: string) => {
