@@ -1,10 +1,11 @@
+// hooks/useAuth.tsx
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User } from '../types';
-import { mockUsers } from '../data/mockData';
+import { loginUser } from '../api/ApiCenter';
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -32,32 +33,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
+    try {
+      const response = await loginUser(email, password);
 
-    // Simulation d'authentification
-    await new Promise(resolve => setTimeout(resolve, 1000));
+      // Sauvegarder le token et l'utilisateur
+      localStorage.setItem('medcare_user', JSON.stringify(response.user));
+      localStorage.setItem('medcare_token', response.token);
 
-    const foundUser = mockUsers.find(u => u.username === username);
-
-    if (foundUser && foundUser.isActive) {
-      // En production, vérifier le mot de passe hashé
-      // Pour la démo, accepter n'importe quel mot de passe non vide
-      if (password.length > 0) {
-        setUser(foundUser);
-        localStorage.setItem('medcare_user', JSON.stringify(foundUser));
-        setIsLoading(false);
-        return true;
-      }
+      setUser(response.user);
+      setIsLoading(false);
+      return true;
+    } catch (error) {
+      console.error("Erreur de connexion:", error);
+      setIsLoading(false);
+      return false;
     }
-
-    setIsLoading(false);
-    return false;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('medcare_user');
+    localStorage.removeItem('medcare_token');
   };
 
   return (
