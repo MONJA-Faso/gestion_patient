@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { Heart, Eye, EyeOff, Lock, User } from 'lucide-react';
-import { loginUser } from '../../api/ApiCenter';
+// import { loginUser } from '../../api/ApiCenter';
 
 interface LoginFormProps {
   isRegister: boolean;
@@ -13,7 +13,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ isRegister, setIsRegister 
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const { isLoading } = useAuth();
+  const { login, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +24,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ isRegister, setIsRegister 
       return;
     }
 
-    const success = await loginUser(username, password);
+    const success = await login(username, password);
     console.log(success);
     
     if (!success) {
