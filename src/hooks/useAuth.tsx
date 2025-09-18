@@ -1,4 +1,3 @@
-// hooks/useAuth.tsx
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User } from '../types';
 import { loginUser } from '../api/ApiCenter';

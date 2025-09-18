@@ -23,7 +23,7 @@ export const api = axios.create({
 
 // Fonction pour brancher les interceptors
 export const setupInterceptors = (logout: () => void) => {
-    
+
     // Ajout du token automatiquement
     api.interceptors.request.use((config) => {
         const token = localStorage.getItem('medcare_token');
@@ -59,6 +59,7 @@ export const registerUser = async (userData: RegisterUserData): Promise<Register
 
 export const loginUser = async (email: string, password: string): Promise<LoginResponse> => {
     const response = await api.post<LoginResponse>('/auth/login', { email, password });
+    console.log(response.data.user);    
     return response.data;
 };
 
