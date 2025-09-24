@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User } from '../types';
-import { loginUser } from '../api/ApiCenter';
+import { loginUser, getMe } from '../api/ApiCenter';
 
 interface AuthContextType {
   user: User | null;
@@ -35,19 +35,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const response = await loginUser(email, password);
 
-      // Sauvegarder le token et l'utilisateur
-      localStorage.setItem('medcare_user', JSON.stringify(response.user));
+      const response = await loginUser(email, password);
       localStorage.setItem('medcare_token', response.token);
 
-      setUser(response.user);
+      const user = await getMe(response.id, response.token);
+      localStorage.setItem('medcare_user', JSON.stringify(user));
+
+      setUser(user);
       setIsLoading(false);
       return true;
+
     } catch (error) {
+
       console.error("Erreur de connexion:", error);
       setIsLoading(false);
       return false;
+
     }
   };
 

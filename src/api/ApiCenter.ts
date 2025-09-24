@@ -1,11 +1,5 @@
 import axios from "axios";
-import { User, RegisterUserData, RegisterUserResponse } from "../types";
-
-export interface LoginResponse {
-    message: string;
-    token: string;
-    user: User;
-}
+import { User, RegisterUserData, RegisterUserResponse, LoginResponse } from "../types";
 
 // parse les données à envoyer au backend
 interface ParsedRegisterUserData {
@@ -14,6 +8,11 @@ interface ParsedRegisterUserData {
     email: string;
     mot_de_passe: string;
     role: 'Secretaire' | 'Infirmiere' | 'Medecin_Chef';
+}
+
+interface ParsedLoginUserData {
+    email: string;
+    mot_de_passe: string;
 }
 
 export const api = axios.create({
@@ -58,18 +57,25 @@ export const registerUser = async (userData: RegisterUserData): Promise<Register
         role: userData.role,
     };
 
-    console.log("Données :" ,parsedData);
-    
     const response = await api.post<RegisterUserResponse>('/auth/register', parsedData);
-
-    console.log("Responses :",response.data);
-    
     return response.data;
 };
 
 export const loginUser = async (email: string, password: string): Promise<LoginResponse> => {
-    const response = await api.post<LoginResponse>('/auth/login', { email, password });
-    console.log(response.data.user);
+    const parsedData: ParsedLoginUserData = {
+        email: email,
+        mot_de_passe: password,
+    };
+    const response = await api.post<LoginResponse>('/auth/login', parsedData);
+    console.log("Reponse Login :", response.data);
     return response.data;
 };
 
+export const getMe = async (id: number, token: string): Promise<User> => {
+    const response = await api.get<User>(`/users/${id}`, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+    return response.data;
+}

@@ -1,12 +1,18 @@
 export interface User {
-  id: string;
-  username: string;
+  id: number;
   firstName: string;
   lastName: string;
   role: 'Secretaire' | 'Infirmiere' | 'Medecin_Chef';
   email: string;
   isActive: boolean;
   createdAt: string;
+  updatedAt : string;
+}
+
+export interface LoginResponse {
+    email: string;
+    token: string;
+    id: number;
 }
 
 export interface RegisterUserData {
