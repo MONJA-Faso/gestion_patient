@@ -1,7 +1,7 @@
 export interface User {
   id: number;
-  firstName: string;
-  lastName: string;
+  nom: string;
+  prenom: string;
   role: 'Secretaire' | 'Infirmiere' | 'Medecin_Chef';
   email: string;
   isActive: boolean;

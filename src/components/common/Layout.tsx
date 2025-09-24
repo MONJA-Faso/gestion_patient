@@ -30,11 +30,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
       { id: 'patients', label: 'Patients', icon: Users },
     ];
 
-    if (user?.role === 'secretary') {
+    if (user?.role === 'Secretaire') {
       return [...baseItems, { id: 'appointments', label: 'Rendez-vous', icon: Calendar }];
     }
 
-    if (user?.role === 'nurse') {
+    if (user?.role === 'Infirmiere') {
       return [
         ...baseItems,
         { id: 'appointments', label: 'Rendez-vous', icon: Calendar },
@@ -42,7 +42,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
       ];
     }
 
-    if (user?.role === 'doctor') {
+    if (user?.role === 'Medecin_Chef') {
       return [
         ...baseItems,
         { id: 'appointments', label: 'Rendez-vous', icon: Calendar },
@@ -130,12 +130,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
           <div className="flex items-center space-x-3 mb-4">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
               <span className="text-white font-semibold text-sm">
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
+                {user?.nom?.[0]}{user?.prenom?.[0]}
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
-                {user?.firstName} {user?.lastName}
+                {user?.nom} {user?.prenom}
               </p>
               <p className="text-xs text-gray-500 truncate">
                 {getRoleLabel(user?.role || '')}

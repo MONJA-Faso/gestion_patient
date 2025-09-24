@@ -42,6 +42,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const user = await getMe(response.id, response.token);
       localStorage.setItem('medcare_user', JSON.stringify(user));
 
+      console.log("Utilisateur connecté:", user.nom);
+      
+
       setUser(user);
       setIsLoading(false);
       return true;
