@@ -11,12 +11,11 @@ interface RegisterFormProps {
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({ setIsRegister }) => {
     const [formData, setFormData] = useState<RegisterUserData>({
-        username: '',
         firstName: '',
         lastName: '',
         email: '',
         password: '',
-        role: 'secretary'
+        role: 'Secretaire'
     });
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -69,7 +68,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setIsRegister }) => 
         setError('');
 
         // Validation
-        if (!formData.username || !formData.firstName || !formData.lastName ||
+        if (!formData.firstName || !formData.lastName ||
             !formData.email || !formData.password || !confirmPassword) {
             setError('Veuillez remplir tous les champs');
             return;
@@ -80,8 +79,15 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setIsRegister }) => 
             return;
         }
 
-        if (formData.password.length < 6) {
-            setError('Le mot de passe doit contenir au moins 6 caractères');
+        if (formData.password.length < 8) {
+            setError('Le mot de passe doit contenir au moins 8 caractères');
+            return;
+        }
+
+        // Vérification des critères de complexité
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+        if (!passwordRegex.test(formData.password)) {
+            setError('Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre.');
             return;
         }
 
@@ -102,12 +108,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setIsRegister }) => 
 
             // Réinitialiser le formulaire
             setFormData({
-                username: '',
                 firstName: '',
                 lastName: '',
                 email: '',
                 password: '',
-                role: 'secretary'
+                role: 'Secretaire'
             });
             setConfirmPassword('');
 
@@ -184,26 +189,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setIsRegister }) => 
                                 </div>
                             </div>
 
-                            {/* Nom d'utilisateur */}
-                            <div>
-                                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                                    Nom d'utilisateur
-                                </label>
-                                <div className="relative">
-                                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        id="username"
-                                        name="username"
-                                        value={formData.username}
-                                        onChange={handleInputChange}
-                                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                        placeholder="Choisissez un nom d'utilisateur"
-                                        disabled={isLoading}
-                                    />
-                                </div>
-                            </div>
-
                             {/* Email */}
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -237,9 +222,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ setIsRegister }) => 
                                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                     disabled={isLoading}
                                 >
-                                    <option value="secretary">Secrétaire</option>
-                                    <option value="nurse">Infirmière</option>
-                                    <option value="doctor">Médecin</option>
+                                    <option value="Secretaire">Secrétaire</option>
+                                    <option value="Infirmiere">Infirmière</option>
+                                    <option value="Medecin_Chef">Médecin Chef</option>
                                 </select>
                             </div>
 

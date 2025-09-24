@@ -7,11 +7,13 @@ export interface LoginResponse {
     user: User;
 }
 
-// filtre les données à envoyer au backend
-interface FilteredRegisterData {
+// parse les données à envoyer au backend
+interface ParsedRegisterUserData {
     nom: string;
+    prenom: string;
     email: string;
-    password: string;
+    mot_de_passe: string;
+    role: 'Secretaire' | 'Infirmiere' | 'Medecin_Chef';
 }
 
 export const api = axios.create({
@@ -47,19 +49,27 @@ export const setupInterceptors = (logout: () => void) => {
 };
 
 export const registerUser = async (userData: RegisterUserData): Promise<RegisterUserResponse> => {
-    const filtredData: FilteredRegisterData = {
-        nom: userData.firstName + ' ' + userData.lastName,
+
+    const parsedData: ParsedRegisterUserData = {
+        nom: userData.lastName,
+        prenom: userData.firstName,
         email: userData.email,
-        password: userData.password,
+        mot_de_passe: userData.password,
+        role: userData.role,
     };
 
-    const response = await api.post<RegisterUserResponse>('/auth/register', filtredData);
+    console.log("Données :" ,parsedData);
+    
+    const response = await api.post<RegisterUserResponse>('/auth/register', parsedData);
+
+    console.log("Responses :",response.data);
+    
     return response.data;
 };
 
 export const loginUser = async (email: string, password: string): Promise<LoginResponse> => {
     const response = await api.post<LoginResponse>('/auth/login', { email, password });
-    console.log(response.data.user);    
+    console.log(response.data.user);
     return response.data;
 };
 

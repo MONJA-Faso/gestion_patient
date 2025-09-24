@@ -3,17 +3,16 @@ export interface User {
   username: string;
   firstName: string;
   lastName: string;
-  role: 'secretary' | 'nurse' | 'doctor';
+  role: 'Secretaire' | 'Infirmiere' | 'Medecin_Chef';
   email: string;
   isActive: boolean;
   createdAt: string;
 }
 
 export interface RegisterUserData {
-  username: string;
   firstName: string;
   lastName: string;
-  role: 'secretary' | 'nurse' | 'doctor';
+  role: 'Secretaire' | 'Infirmiere' | 'Medecin_Chef';
   email: string;
   password: string;
 }
