@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User } from '../types';
-import { getAllUsers, updateUserDetails } from '../api/ApiCenter';
+import { deleteSingleUser, getAllUsers, toggleSingleUserStatus, updateUserDetails } from '../api/ApiCenter';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -27,13 +27,18 @@ export const useUsers = () => {
   };
 
   const deleteUser = (id: string) => {
-    setUsers(prev => prev.filter(u => u.id !== id));
+    deleteSingleUser(id).then(async () => {
+      setUsers(await getAllUsers())
+    })
   };
 
-  const toggleUserStatus = (id: string) => {
-    setUsers(prev => prev.map(u =>
-      u.id === id ? { ...u, isActive: !u.isActive } : u
-    ));
+  const toggleUserStatus = (id: string, userStatus: boolean) => {
+    toggleSingleUserStatus(id, userStatus).then(() => {
+      setUsers(prev => prev.map(u =>
+        u.id === id ? { ...u, isActive: !u.isActive } : u
+      ));
+    })
+
   };
 
   const getUserById = (id: string) => {

@@ -147,3 +147,31 @@ export const updateUserDetails = async (id: string, updates: Partial<User>): Pro
     });
     return response.data;
 }
+
+export const deleteSingleUser = async (id: string): Promise<string> => {
+    const token = localStorage.getItem('medcare_token')
+
+    const response = await api.delete(`/users/${id}`, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
+
+    return response.data
+}
+
+export const toggleSingleUserStatus = async (id: string, userStatus: boolean): Promise<string> => {
+    const token = localStorage.getItem('medcare_token')
+
+    const parsedData = {
+        "isActive": userStatus
+    }
+
+    const response = await api.patch(`/users/${id}/toggleStatus`,parsedData, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
+
+    return response.data
+}

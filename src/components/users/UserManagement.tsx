@@ -11,13 +11,15 @@ import {
   Save,
   X,
   Mail,
-  Calendar
+  Calendar,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { createUser } from '../../api/ApiCenter';
 import Swal from 'sweetalert2';
 
 export const UserManagement: React.FC = () => {
-  const { users, fetchUsers, updateUser, deleteUser, loading } = useUsers();
+  const { users, fetchUsers, updateUser, deleteUser, toggleUserStatus, loading } = useUsers();
   const { user: currentUser } = useAuth();
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [editingUser, setEditingUser] = useState<string | null>(null);
@@ -196,6 +198,40 @@ export const UserManagement: React.FC = () => {
     setEditingUser(user.id);
     setIsAddingUser(true);
   };
+
+  const handleDeleteUser = async (id: string) => {
+    try {
+      deleteUser(id);
+      Swal.fire({
+        icon: 'success',
+        title: 'Succès',
+        text: `Utilisateur Supprimé avec Succes`,
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6',
+        timer: 2000,
+        timerProgressBar: true
+      });
+    } catch (error: any) {
+      if (error.response) {
+
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erreur',
+          text: error.response?.data.error,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33'
+        });
+        return;
+
+      } else {
+        throw new Error('Erreur de connexion');
+      }
+    }
+  }
+
+  const handleToggleStat = (id: string, userStatus: boolean) => {
+    toggleUserStatus(id, userStatus)
+  }
 
   const handleCancel = () => {
     setIsAddingUser(false);
@@ -453,6 +489,24 @@ export const UserManagement: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   {canManageUser(user) && (
                     <>
+
+                      {
+                        (user.isActive) ? (
+                          <button
+                            onClick={() => handleToggleStat(user.id, false)}
+                            className="p-2 text-gray-400 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                          >
+                            <XCircle className="h-5 w-5 " />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleToggleStat(user.id, true)}
+                            className="p-2 text-gray-400 hover:text-green-300 hover:bg-green-50 rounded-lg transition-colors duration-200"
+                          >
+                            <CheckCircle className="h-5 w-5" />
+                          </button>
+                        )
+                      }
                       <button
                         onClick={() => handleEdit(user)}
                         className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
@@ -464,7 +518,7 @@ export const UserManagement: React.FC = () => {
                       <button
                         onClick={() => {
                           if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {
-                            deleteUser(user.id);
+                            handleDeleteUser(user.id);
                           }
                         }}
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
@@ -481,20 +535,22 @@ export const UserManagement: React.FC = () => {
         </div>
       </div>
 
-      {users.length === 0 && (
-        <div className="bg-white rounded-xl shadow-lg p-12 text-center border border-gray-100">
-          <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun utilisateur</h3>
-          <p className="text-gray-600 mb-6">Commencez par ajouter votre premier utilisateur.</p>
-          <button
-            onClick={() => setIsAddingUser(true)}
-            className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
-          >
-            <Plus className="h-5 w-5" />
-            <span>Ajouter un utilisateur</span>
-          </button>
-        </div>
-      )}
-    </div>
+      {
+        users.length === 0 && (
+          <div className="bg-white rounded-xl shadow-lg p-12 text-center border border-gray-100">
+            <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun utilisateur</h3>
+            <p className="text-gray-600 mb-6">Commencez par ajouter votre premier utilisateur.</p>
+            <button
+              onClick={() => setIsAddingUser(true)}
+              className="inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+            >
+              <Plus className="h-5 w-5" />
+              <span>Ajouter un utilisateur</span>
+            </button>
+          </div>
+        )
+      }
+    </div >
   );
 };
