@@ -80,7 +80,7 @@ export const getMe = async (id: number, token: string): Promise<User> => {
     return response.data;
 }
 
-export const changePassword = async (userId: number, currentPassword: string, newPassword: string): Promise<{ message: string }> => {
+export const changePassword = async (userId: string, currentPassword: string, newPassword: string): Promise<{ message: string }> => {
     try {
         const response = await api.patch<{ message: string }>(
             `/auth/${userId}/changePassword`,
@@ -98,3 +98,24 @@ export const changePassword = async (userId: number, currentPassword: string, ne
         }
     }
 };
+
+export const createUser = async (userData : RegisterUserData) : Promise<RegisterUserResponse> => {
+
+    const token = localStorage.getItem('medcare_token');
+
+    const parsedData: ParsedRegisterUserData = {
+        nom: userData.lastName,
+        prenom: userData.firstName,
+        email: userData.email,
+        mot_de_passe: userData.password,
+        role: userData.role,
+    };
+
+    const response = await api.post<RegisterUserResponse>('/users/create', parsedData, {
+        headers : {
+            Authorization : `Bearer ${token}`
+        }
+    });
+
+    return response.data
+}

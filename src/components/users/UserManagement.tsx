@@ -1,22 +1,21 @@
 import React, { useState } from 'react';
 import { useUsers } from '../../hooks/useUsers';
 import { useAuth } from '../../hooks/useAuth';
-import { 
-  Users, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Eye, 
+import {
+  Users,
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
   EyeOff,
   Save,
   X,
-  UserPlus,
   Shield,
   Mail,
-  Phone,
-  Calendar,
-  AlertCircle
+  Calendar
 } from 'lucide-react';
+import { createUser } from '../../api/ApiCenter';
+import Swal from 'sweetalert2';
 
 export const UserManagement: React.FC = () => {
   const { users, addUser, updateUser, deleteUser, loading } = useUsers();
@@ -26,10 +25,10 @@ export const UserManagement: React.FC = () => {
   const [showPassword, setShowPassword] = useState<Record<string, boolean>>({});
   const [newUser, setNewUser] = useState({
     username: '',
-    firstName: '',
-    lastName: '',
+    prenom: '',
+    nom: '',
     email: '',
-    role: 'secretary' as 'secretary' | 'nurse' | 'doctor',
+    role: 'Secretaire' as 'Secretaire' | 'Infirmiere' | 'Medecin_Chef',
     password: '',
     confirmPassword: ''
   });
@@ -47,18 +46,12 @@ export const UserManagement: React.FC = () => {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!newUser.username.trim()) {
-      newErrors.username = 'Le nom d\'utilisateur est obligatoire';
-    } else if (users.some(u => u.username === newUser.username && (!editingUser || u.id !== editingUser))) {
-      newErrors.username = 'Ce nom d\'utilisateur existe déjà';
+    if (!newUser.prenom.trim()) {
+      newErrors.prenom = 'Le prénom est obligatoire';
     }
 
-    if (!newUser.firstName.trim()) {
-      newErrors.firstName = 'Le prénom est obligatoire';
-    }
-
-    if (!newUser.lastName.trim()) {
-      newErrors.lastName = 'Le nom est obligatoire';
+    if (!newUser.nom.trim()) {
+      newErrors.nom = 'Le nom est obligatoire';
     }
 
     if (!newUser.email.trim()) {
@@ -83,47 +76,76 @@ export const UserManagement: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateForm()) return;
 
     if (editingUser) {
       updateUser(editingUser, {
-        username: newUser.username,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
+        prenom: newUser.prenom,
+        nom: newUser.nom,
         email: newUser.email,
         role: newUser.role
       });
       setEditingUser(null);
     } else {
-      addUser({
-        username: newUser.username,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        email: newUser.email,
-        role: newUser.role,
-        password: newUser.password
-      });
-      setIsAddingUser(false);
+      try {
+        const response = await createUser({
+          firstName: newUser.prenom,
+          lastName: newUser.nom,
+          email: newUser.email,
+          role: newUser.role,
+          password: newUser.password
+        });
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Succès',
+          text: `Utilisateur ${newUser.prenom} ${newUser.nom} Crée avec Succes`,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#3085d6',
+          timer: 3000,
+          timerProgressBar: true
+        });
+
+        setIsAddingUser(false);
+
+        setNewUser({
+          username: '',
+          prenom: '',
+          nom: '',
+          email: '',
+          role: 'Secretaire',
+          password: '',
+          confirmPassword: ''
+        });
+
+      } catch (error: any) {
+        if (error.response) {
+
+          await Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: error.response?.data.error,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#d33'
+          });
+          return;
+
+        } else {
+          throw new Error('Erreur de connexion');
+        }
+      }
     }
 
-    setNewUser({
-      username: '',
-      firstName: '',
-      lastName: '',
-      email: '',
-      role: 'secretary',
-      password: '',
-      confirmPassword: ''
-    });
+
     setErrors({});
   };
 
   const handleEdit = (user: any) => {
     setNewUser({
       username: user.username,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      prenom: user.prenom,
+      nom: user.nom,
       email: user.email,
       role: user.role,
       password: '',
@@ -138,10 +160,10 @@ export const UserManagement: React.FC = () => {
     setEditingUser(null);
     setNewUser({
       username: '',
-      firstName: '',
-      lastName: '',
+      prenom: '',
+      nom: '',
       email: '',
-      role: 'secretary',
+      role: 'Secretaire',
       password: '',
       confirmPassword: ''
     });
@@ -150,24 +172,24 @@ export const UserManagement: React.FC = () => {
 
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case 'secretary': return 'Secrétaire';
-      case 'nurse': return 'Infirmière';
-      case 'doctor': return 'Médecin-Chef';
+      case 'Secretaire': return 'Secrétaire';
+      case 'Infirmiere': return 'Infirmière';
+      case 'Medecin_Chef': return 'Médecin-Chef';
       default: return role;
     }
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'secretary': return 'bg-blue-100 text-blue-800';
-      case 'nurse': return 'bg-green-100 text-green-800';
-      case 'doctor': return 'bg-purple-100 text-purple-800';
+      case 'Secretaire': return 'bg-blue-100 text-blue-800';
+      case 'Infirmiere': return 'bg-green-100 text-green-800';
+      case 'Medecin_Chef': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const canManageUser = (targetUser: any) => {
-    return currentUser?.role === 'doctor' && targetUser.id !== currentUser.id;
+    return currentUser?.role === 'Medecin_Chef' && targetUser.id !== currentUser.id;
   };
 
   return (
@@ -179,7 +201,7 @@ export const UserManagement: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-900">Gestion des Utilisateurs</h2>
             <p className="text-gray-600">{users.length} utilisateur{users.length > 1 ? 's' : ''} enregistré{users.length > 1 ? 's' : ''}</p>
           </div>
-          
+
           <button
             onClick={() => setIsAddingUser(true)}
             className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
@@ -206,38 +228,6 @@ export const UserManagement: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nom d'utilisateur *
-              </label>
-              <input
-                type="text"
-                value={newUser.username}
-                onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.username ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                }`}
-                placeholder="nom.utilisateur"
-              />
-              {errors.username && (
-                <p className="mt-1 text-sm text-red-600">{errors.username}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Rôle *
-              </label>
-              <select
-                value={newUser.role}
-                onChange={(e) => setNewUser({ ...newUser, role: e.target.value as any })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="secretary">Secrétaire</option>
-                <option value="nurse">Infirmière</option>
-                <option value="doctor">Médecin-Chef</option>
-              </select>
-            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -245,15 +235,14 @@ export const UserManagement: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={newUser.firstName}
-                onChange={(e) => setNewUser({ ...newUser, firstName: e.target.value })}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                }`}
+                value={newUser.prenom}
+                onChange={(e) => setNewUser({ ...newUser, prenom: e.target.value })}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.prenom ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                 placeholder="Prénom"
               />
-              {errors.firstName && (
-                <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
+              {errors.prenom && (
+                <p className="mt-1 text-sm text-red-600">{errors.prenom}</p>
               )}
             </div>
 
@@ -263,16 +252,30 @@ export const UserManagement: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={newUser.lastName}
-                onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                }`}
+                value={newUser.nom}
+                onChange={(e) => setNewUser({ ...newUser, nom: e.target.value })}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.nom ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                 placeholder="Nom"
               />
-              {errors.lastName && (
-                <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
+              {errors.nom && (
+                <p className="mt-1 text-sm text-red-600">{errors.nom}</p>
               )}
+            </div>
+
+            <div className='md:col-span-2'>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rôle *
+              </label>
+              <select
+                value={newUser.role}
+                onChange={(e) => setNewUser({ ...newUser, role: e.target.value as any })}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="Secretaire">Secrétaire</option>
+                <option value="Infirmiere">Infirmière</option>
+                <option value="Medecin_Chef">Médecin-Chef</option>
+              </select>
             </div>
 
             <div className="md:col-span-2">
@@ -283,9 +286,8 @@ export const UserManagement: React.FC = () => {
                 type="email"
                 value={newUser.email}
                 onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                 placeholder="utilisateur@medcare.fr"
               />
               {errors.email && (
@@ -304,9 +306,8 @@ export const UserManagement: React.FC = () => {
                       type={showPassword.new ? 'text' : 'password'}
                       value={newUser.password}
                       onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                      className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                        errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                        }`}
                       placeholder="Mot de passe"
                     />
                     <button
@@ -330,9 +331,8 @@ export const UserManagement: React.FC = () => {
                     type="password"
                     value={newUser.confirmPassword}
                     onChange={(e) => setNewUser({ ...newUser, confirmPassword: e.target.value })}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${errors.confirmPassword ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                     placeholder="Confirmer le mot de passe"
                   />
                   {errors.confirmPassword && (
@@ -370,14 +370,14 @@ export const UserManagement: React.FC = () => {
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
                     <span className="text-white font-semibold text-lg">
-                      {user.firstName[0]}{user.lastName[0]}
+                      {user.prenom[0]}{user.nom[0]}
                     </span>
                   </div>
-                  
+
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        {user.firstName} {user.lastName}
+                        {user.prenom} {user.nom}
                       </h3>
                       <span className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${getRoleColor(user.role)}`}>
                         {getRoleLabel(user.role)}
@@ -393,18 +393,13 @@ export const UserManagement: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                      <div className="flex items-center space-x-1">
-                        <Shield className="h-4 w-4" />
-                        <span>{user.username}</span>
-                      </div>
-                      
                       <div className="flex items-center space-x-1">
                         <Mail className="h-4 w-4" />
                         <span>{user.email}</span>
                       </div>
-                      
+
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-4 w-4" />
                         <span>Créé le {new Date(user.createdAt).toLocaleDateString('fr-FR')}</span>
@@ -412,7 +407,7 @@ export const UserManagement: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   {canManageUser(user) && (
                     <>
@@ -423,7 +418,7 @@ export const UserManagement: React.FC = () => {
                       >
                         <Edit className="h-5 w-5" />
                       </button>
-                      
+
                       <button
                         onClick={() => {
                           if (confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) {

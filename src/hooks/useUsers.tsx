@@ -14,7 +14,7 @@ export const useUsers = () => {
     }, 500);
   }, []);
 
-  const addUser = (userData: Omit<User, 'id' | 'createdAt' | 'isActive'>) => {
+  const addUser = (userData: Omit<User, 'id' |'createdAt' | 'isActive'>) => {
     const newUser: User = {
       ...userData,
       id: Date.now().toString(),

@@ -1,5 +1,5 @@
 export interface User {
-  id: number;
+  id: string;
   nom: string;
   prenom: string;
   role: 'Secretaire' | 'Infirmiere' | 'Medecin_Chef';
@@ -32,8 +32,8 @@ export interface RegisterUserResponse {
 export interface Patient {
   id: string;
   patientNumber: string;
-  firstName: string;
-  lastName: string;
+  prenom: string;
+  nom: string;
   gender: 'male' | 'female';
   dateOfBirth: string;
   address: string;

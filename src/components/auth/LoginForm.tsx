@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { Heart, Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 interface LoginFormProps {
   isRegister: boolean;
@@ -25,8 +26,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({ isRegister, setIsRegister 
 
     const success = await login(email, password);
 
+    console.log("Login success:", success);
+
+
     if (!success) {
       setError('Identifiants incorrects');
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: "Échec de la connexion. Veuillez vérifier vos identifiants.",
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#d33'
+      });
     }
   };
 
