@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { 
-  Settings as SettingsIcon, 
-  User, 
-  Lock, 
-  Bell, 
-  Shield, 
+import { changePassword } from '../../api/ApiCenter';
+import Swal from 'sweetalert2';
+import {
+  Settings as SettingsIcon,
+  User,
+  Lock,
+  Bell,
+  Shield,
   Database,
   Download,
   Upload,
@@ -24,8 +26,8 @@ export const Settings: React.FC = () => {
   const [saved, setSaved] = useState(false);
 
   const [profileData, setProfileData] = useState({
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
+    firstName: user?.nom || '',
+    lastName: user?.prenom || '',
     email: user?.email || '',
     phone: '',
     address: ''
@@ -57,24 +59,67 @@ export const Settings: React.FC = () => {
     setTimeout(() => setSaved(false), 3000);
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('Les mots de passe ne correspondent pas');
+      await Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: 'Les mots de passe ne correspondent pas',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#d33'
+      });
       return;
     }
+
     if (passwordData.newPassword.length < 6) {
-      alert('Le mot de passe doit contenir au moins 6 caractères');
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Mot de passe trop court',
+        text: 'Le mot de passe doit contenir au moins 6 caractères',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#f39c12'
+      });
       return;
     }
-    
-    // Simulation de changement de mot de passe
+
+    try {
+      const response = await changePassword(user!.id, passwordData.currentPassword, passwordData.newPassword);
+      console.log("Password change response:", response);
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Succès',
+        text: 'Mot de passe changé avec succès',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6',
+        timer: 3000,
+        timerProgressBar: true
+      });
+
+    } catch (error: any) {
+      if (error.response) {
+
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erreur',
+          text: error.response?.data.error,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33'
+        });
+        return;
+
+      } else {
+        throw new Error('Erreur de connexion');
+      }
+    }
+
     setSaved(true);
     setPasswordData({
       currentPassword: '',
       newPassword: '',
       confirmPassword: ''
     });
-    setTimeout(() => setSaved(false), 3000);
+    setTimeout(() => setSaved(false), 5000);
   };
 
   const handleExportData = () => {
@@ -87,7 +132,7 @@ export const Settings: React.FC = () => {
         system: systemSettings
       }
     };
-    
+
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -130,16 +175,15 @@ export const Settings: React.FC = () => {
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
-                
+
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                      isActive
-                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
+                    className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${isActive
+                      ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
+                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
                   >
                     <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
                     <span className="font-medium">{tab.label}</span>
@@ -163,7 +207,7 @@ export const Settings: React.FC = () => {
             {activeTab === 'profile' && (
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold text-gray-900">Informations du Profil</h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -243,7 +287,7 @@ export const Settings: React.FC = () => {
             {activeTab === 'security' && (
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold text-gray-900">Sécurité et Mot de Passe</h3>
-                
+
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -324,7 +368,7 @@ export const Settings: React.FC = () => {
             {activeTab === 'notifications' && (
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold text-gray-900">Préférences de Notifications</h3>
-                
+
                 <div className="space-y-4">
                   {Object.entries(notifications).map(([key, value]) => (
                     <div key={key} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -370,7 +414,7 @@ export const Settings: React.FC = () => {
             {activeTab === 'system' && (
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold text-gray-900">Paramètres Système</h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -451,7 +495,7 @@ export const Settings: React.FC = () => {
             {activeTab === 'data' && (
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold text-gray-900">Gestion des Données</h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="p-6 border border-gray-200 rounded-lg">
                     <div className="flex items-center space-x-3 mb-4">
@@ -491,7 +535,7 @@ export const Settings: React.FC = () => {
                     <div>
                       <h4 className="font-medium text-yellow-800">Informations importantes</h4>
                       <p className="text-sm text-yellow-700 mt-1">
-                        L'export des données ne contient que vos paramètres personnels. 
+                        L'export des données ne contient que vos paramètres personnels.
                         Les données médicales des patients ne sont pas incluses pour des raisons de sécurité.
                       </p>
                     </div>

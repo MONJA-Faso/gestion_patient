@@ -79,3 +79,22 @@ export const getMe = async (id: number, token: string): Promise<User> => {
     });
     return response.data;
 }
+
+export const changePassword = async (userId: number, currentPassword: string, newPassword: string): Promise<{ message: string }> => {
+    try {
+        const response = await api.patch<{ message: string }>(
+            `/auth/${userId}/changePassword`,
+            {
+                oldPassword: currentPassword,
+                newPassword: newPassword,
+            }
+        );
+        return response.data;
+    } catch (error: any) {
+        if (error.response) {
+            throw error;
+        } else {
+            throw new Error('Erreur de connexion');
+        }
+    }
+};
