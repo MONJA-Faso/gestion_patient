@@ -10,7 +10,6 @@ import {
   EyeOff,
   Save,
   X,
-  Shield,
   Mail,
   Calendar
 } from 'lucide-react';
@@ -18,7 +17,7 @@ import { createUser } from '../../api/ApiCenter';
 import Swal from 'sweetalert2';
 
 export const UserManagement: React.FC = () => {
-  const { users, addUser, updateUser, deleteUser, loading } = useUsers();
+  const { users, fetchUsers, updateUser, deleteUser, loading } = useUsers();
   const { user: currentUser } = useAuth();
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [editingUser, setEditingUser] = useState<string | null>(null);
@@ -80,21 +79,25 @@ export const UserManagement: React.FC = () => {
     if (!validateForm()) return;
 
     if (editingUser) {
-      updateUser(editingUser, {
-        prenom: newUser.prenom,
-        nom: newUser.nom,
-        email: newUser.email,
-        role: newUser.role
-      });
-      setEditingUser(null);
-    } else {
       try {
-        const response = await createUser({
-          firstName: newUser.prenom,
-          lastName: newUser.nom,
+        updateUser(editingUser, {
+          prenom: newUser.prenom,
+          nom: newUser.nom,
           email: newUser.email,
-          role: newUser.role,
-          password: newUser.password
+          role: newUser.role
+        });
+
+        setEditingUser(null);
+        setIsAddingUser(false);
+
+        setNewUser({
+          username: '',
+          prenom: '',
+          nom: '',
+          email: '',
+          role: 'Secretaire',
+          password: '',
+          confirmPassword: ''
         });
 
         Swal.fire({
@@ -107,6 +110,45 @@ export const UserManagement: React.FC = () => {
           timerProgressBar: true
         });
 
+      } catch (error: any) {
+        if (error.response) {
+
+          await Swal.fire({
+            icon: 'error',
+            title: 'Erreur',
+            text: error.response?.data.error,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#d33'
+          });
+          return;
+
+        } else {
+          throw new Error('Erreur de connexion');
+        }
+      }
+    } else {
+      try {
+        const response = await createUser({
+          firstName: newUser.prenom,
+          lastName: newUser.nom,
+          email: newUser.email,
+          role: newUser.role,
+          password: newUser.password
+        });
+
+        console.log(response);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Succès',
+          text: `Utilisateur ${newUser.prenom} ${newUser.nom} Crée avec Succes`,
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#3085d6',
+          timer: 3000,
+          timerProgressBar: true
+        });
+
+        fetchUsers();
         setIsAddingUser(false);
 
         setNewUser({

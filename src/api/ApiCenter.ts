@@ -99,7 +99,7 @@ export const changePassword = async (userId: string, currentPassword: string, ne
     }
 };
 
-export const createUser = async (userData : RegisterUserData) : Promise<RegisterUserResponse> => {
+export const createUser = async (userData: RegisterUserData): Promise<RegisterUserResponse> => {
 
     const token = localStorage.getItem('medcare_token');
 
@@ -112,10 +112,38 @@ export const createUser = async (userData : RegisterUserData) : Promise<Register
     };
 
     const response = await api.post<RegisterUserResponse>('/users/create', parsedData, {
-        headers : {
-            Authorization : `Bearer ${token}`
+        headers: {
+            Authorization: `Bearer ${token}`
         }
     });
 
     return response.data
+}
+
+export const getAllUsers = async (): Promise<User[]> => {
+    const token = localStorage.getItem('medcare_token');
+    const response = await api.get<User[]>('/users/allUsers', {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+    return response.data;
+}
+
+export const updateUserDetails = async (id: string, updates: Partial<User>): Promise<User> => {
+    const token = localStorage.getItem('medcare_token');
+
+    const parsedData: Partial<User> = {
+        nom: updates.nom || '',
+        prenom: updates.prenom || '',
+        email: updates.email || '',
+        role: updates.role as 'Secretaire' | 'Infirmiere' | 'Medecin_Chef'
+    };
+
+    const response = await api.put<User>(`/users/${id}`, parsedData, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+    return response.data;
 }
