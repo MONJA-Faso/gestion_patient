@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
 import { usePatients } from '../../hooks/usePatients';
-import { useAuth } from '../../hooks/useAuth';
 import { 
   Search, 
   Plus, 
   Eye, 
   Edit, 
   Calendar,
-  Phone,
-  Mail,
   MapPin,
-  Filter,
   UserPlus
 } from 'lucide-react';
 
@@ -21,7 +17,6 @@ interface PatientListProps {
 
 export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAddPatient }) => {
   const { patients, loading, searchPatients } = usePatients();
-  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersexe, setFiltersexe] = useState<'all' | 'Masculin' | 'Féminin'>('all');
   const [filterAge, setFilterAge] = useState<'all' | 'minor' | 'major'>('all');

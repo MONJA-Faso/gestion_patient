@@ -200,3 +200,23 @@ export const createPatient = async (patientData: Omit<any, 'id' | 'createdAt' | 
 
     return response.data;
 }
+
+export const getAllPatients = async (): Promise<any[]> => {
+    const token = localStorage.getItem('medcare_token');
+    const response = await api.get<any[]>('/patients/', {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+    return response.data;
+}
+
+export const getPatientById = async (id: string): Promise<any> => {
+    const token = localStorage.getItem('medcare_token');
+    const response = await api.get<any>(`/patients/${id}`, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+    return response.data;
+}
