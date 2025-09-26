@@ -1,13 +1,21 @@
 import axios from "axios";
-import { User, RegisterUserData, RegisterUserResponse, LoginResponse, Patient } from "../types";
+import {
+    User,
+    RegisterUserData,
+    RegisterUserResponse,
+    LoginResponse,
+    Patient,
+} from "../types";
 
-// parse les données à envoyer au backend
+// Types
+type UserRole = 'Secretaire' | 'Infirmiere' | 'Medecin_Chef';
+
 interface ParsedRegisterUserData {
     nom: string;
     prenom: string;
     email: string;
     mot_de_passe: string;
-    role: 'Secretaire' | 'Infirmiere' | 'Medecin_Chef';
+    role: UserRole;
 }
 
 interface ParsedLoginUserData {
@@ -15,40 +23,21 @@ interface ParsedLoginUserData {
     mot_de_passe: string;
 }
 
+// Axios instance
 export const api = axios.create({
     baseURL: 'http://localhost:3000/api/',
-    headers: {
-        'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
 });
 
-// Fonction pour brancher les interceptors
-export const setupInterceptors = (logout: () => void) => {
+// Helpers
+const getToken = () => localStorage.getItem('medcare_token') || '';
 
-    // Ajout du token automatiquement
-    api.interceptors.request.use((config) => {
-        const token = localStorage.getItem('medcare_token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    });
+const authHeader = () => ({
+    Authorization: `Bearer ${getToken()}`
+});
 
-    // Gestion des erreurs 401
-    api.interceptors.response.use(
-        (response) => response,
-        (error) => {
-            if (error.response && error.response.status === 401) {
-                console.warn("Token expiré ou invalide, déconnexion forcée.");
-                logout();
-            }
-            return Promise.reject(error);
-        }
-    );
-};
-
+// User APIs
 export const registerUser = async (userData: RegisterUserData): Promise<RegisterUserResponse> => {
-
     const parsedData: ParsedRegisterUserData = {
         nom: userData.lastName,
         prenom: userData.firstName,
@@ -56,53 +45,40 @@ export const registerUser = async (userData: RegisterUserData): Promise<Register
         mot_de_passe: userData.password,
         role: userData.role,
     };
-
-    const response = await api.post<RegisterUserResponse>('/auth/register', parsedData);
-    return response.data;
+    const { data } = await api.post<RegisterUserResponse>('/auth/register', parsedData);
+    return data;
 };
 
 export const loginUser = async (email: string, password: string): Promise<LoginResponse> => {
-    const parsedData: ParsedLoginUserData = {
-        email: email,
-        mot_de_passe: password,
-    };
-    const response = await api.post<LoginResponse>('/auth/login', parsedData);
-    console.log("Reponse Login :", response.data);
-    return response.data;
+    const parsedData: ParsedLoginUserData = { email, mot_de_passe: password };
+    const { data } = await api.post<LoginResponse>('/auth/login', parsedData);
+    return data;
 };
 
 export const getMe = async (id: number, token: string): Promise<User> => {
-    const response = await api.get<User>(`/users/${id}`, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
+    const { data } = await api.get<User>(`/users/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
     });
-    return response.data;
-}
+    return data;
+};
 
-export const changePassword = async (userId: string, currentPassword: string, newPassword: string): Promise<{ message: string }> => {
+export const changePassword = async (
+    userId: string,
+    currentPassword: string,
+    newPassword: string
+): Promise<{ message: string }> => {
     try {
-        const response = await api.patch<{ message: string }>(
+        const { data } = await api.patch<{ message: string }>(
             `/auth/${userId}/changePassword`,
-            {
-                oldPassword: currentPassword,
-                newPassword: newPassword,
-            }
+            { oldPassword: currentPassword, newPassword }
         );
-        return response.data;
+        return data;
     } catch (error: any) {
-        if (error.response) {
-            throw error;
-        } else {
-            throw new Error('Erreur de connexion');
-        }
+        throw error.response ? error : new Error('Erreur de connexion');
     }
 };
 
 export const createUser = async (userData: RegisterUserData): Promise<RegisterUserResponse> => {
-
-    const token = localStorage.getItem('medcare_token');
-
     const parsedData: ParsedRegisterUserData = {
         nom: userData.lastName,
         prenom: userData.firstName,
@@ -110,113 +86,80 @@ export const createUser = async (userData: RegisterUserData): Promise<RegisterUs
         mot_de_passe: userData.password,
         role: userData.role,
     };
-
-    const response = await api.post<RegisterUserResponse>('/users/create', parsedData, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
+    const { data } = await api.post<RegisterUserResponse>('/users/create', parsedData, {
+        headers: authHeader()
     });
-
-    return response.data
-}
+    return data;
+};
 
 export const getAllUsers = async (): Promise<User[]> => {
-    const token = localStorage.getItem('medcare_token');
-    const response = await api.get<User[]>('/users/allUsers', {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
+    const { data } = await api.get<User[]>('/users/allUsers', {
+        headers: authHeader()
     });
-    return response.data;
-}
+    return data;
+};
 
 export const updateUserDetails = async (id: string, updates: Partial<User>): Promise<User> => {
-    const token = localStorage.getItem('medcare_token');
-
     const parsedData: Partial<User> = {
-        nom: updates.nom || '',
-        prenom: updates.prenom || '',
-        email: updates.email || '',
-        role: updates.role as 'Secretaire' | 'Infirmiere' | 'Medecin_Chef'
+        nom: updates.nom ?? '',
+        prenom: updates.prenom ?? '',
+        email: updates.email ?? '',
+        role: updates.role as UserRole,
     };
-
-    const response = await api.put<User>(`/users/${id}`, parsedData, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
+    const { data } = await api.put<User>(`/users/${id}`, parsedData, {
+        headers: authHeader()
     });
-    return response.data;
-}
+    return data;
+};
 
 export const deleteSingleUser = async (id: string): Promise<string> => {
-    const token = localStorage.getItem('medcare_token')
-
-    const response = await api.delete(`/users/${id}`, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    })
-
-    return response.data
-}
+    const { data } = await api.delete(`/users/${id}`, {
+        headers: authHeader()
+    });
+    return data;
+};
 
 export const toggleSingleUserStatus = async (id: string, userStatus: boolean): Promise<string> => {
-    const token = localStorage.getItem('medcare_token')
+    const { data } = await api.patch(`/users/${id}/toggleStatus`, { isActive: userStatus }, {
+        headers: authHeader()
+    });
+    return data;
+};
 
-    const parsedData = {
-        "isActive": userStatus
-    }
-
-    const response = await api.patch(`/users/${id}/toggleStatus`,parsedData, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    })
-
-    return response.data
-}
-
-// Patients
-
-export const createPatient = async (patientData: Omit<any, 'id' | 'createdAt' | 'updatedAt'>): Promise<any> => {
-    const token = localStorage.getItem('medcare_token');
-
-    const formatedPatientData = {
+// Patient APIs
+export const createPatient = async (
+    patientData: Omit<any, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<any> => {
+    const formattedPatientData = {
         prenom: patientData.prenom,
         nom: patientData.nom,
         sexe: patientData.sexe,
         dateNaissance: patientData.dateNaissance,
-        adresse: patientData.adresse
-    }
-
-    console.log("formatedPatientData:", formatedPatientData);
-    
-
-    const response = await api.post<any>('/patients/create', formatedPatientData, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
+        adresse: patientData.adresse,
+    };
+    const { data } = await api.post<any>('/patients/create', formattedPatientData, {
+        headers: authHeader()
     });
-
-    return response.data;
-}
+    return data;
+};
 
 export const getAllPatients = async (): Promise<any[]> => {
-    const token = localStorage.getItem('medcare_token');
-    const response = await api.get<any[]>('/patients/', {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
+    const { data } = await api.get<any[]>('/patients/', {
+        headers: authHeader()
     });
-    return response.data;
-}
+    return data;
+};
 
 export const getPatientDetails = async (id: string): Promise<Patient> => {
-    const token = localStorage.getItem('medcare_token');
-    const response = await api.get<any>(`/patients/${id}`, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
+    const { data } = await api.get<Patient>(`/patients/${id}`, {
+        headers: authHeader()
     });
-    return response.data;
-}
+    return data;
+};
+
+export const deletePatient = async (id: string): Promise<string> => {
+    const { data } = await api.delete(`/patients/${id}`, {
+        headers: authHeader()
+    });
+    return data;
+};
