@@ -51,7 +51,7 @@ export const Dashboard: React.FC = () => {
     return age;
   };
 
-  const minorPatients = patients.filter(p => getAgeFromBirthDate(p.dateOfBirth) < 18).length;
+  const minorPatients = patients.filter(p => getAgeFromBirthDate(p.dateNaissance) < 18).length;
   const majorPatients = patients.length - minorPatients;
   
   const recentConsultations = medicalRecords
@@ -76,6 +76,7 @@ export const Dashboard: React.FC = () => {
     {
       title: 'Nouveaux Patients',
       value: patients.filter(p => {
+        if (!p.createdAt) return false;
         const createdDate = new Date(p.createdAt);
         const lastMonth = new Date();
         lastMonth.setMonth(lastMonth.getMonth() - 1);
@@ -101,7 +102,7 @@ export const Dashboard: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">
-              {getGreeting()}, {user?.firstName} !
+              {getGreeting()}, {user?.prenom} !
             </h1>
             <p className="text-blue-100 text-lg">
               {getTodayDate()}
@@ -154,12 +155,12 @@ export const Dashboard: React.FC = () => {
                 <div key={record.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
                     <span className="text-white font-semibold text-sm">
-                      {patient?.firstName?.[0]}{patient?.lastName?.[0]}
+                      {patient?.prenom?.[0]}{patient?.nom?.[0]}
                     </span>
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-900">
-                      {patient?.firstName} {patient?.lastName}
+                      {patient?.prenom} {patient?.nom}
                     </p>
                     <p className="text-sm text-gray-600">{record.consultationReason}</p>
                     <p className="text-xs text-gray-500">
@@ -237,7 +238,7 @@ export const Dashboard: React.FC = () => {
             <p className="text-sm text-gray-600">Créer un dossier patient</p>
           </button>
           
-          {user?.role !== 'secretary' && (
+          {user?.role !== 'Secretaire' && (
             <button className="p-4 text-left bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200">
               <FileText className="h-8 w-8 text-green-600 mb-2" />
               <h4 className="font-semibold text-gray-900">Nouvelle Consultation</h4>

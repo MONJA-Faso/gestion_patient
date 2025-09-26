@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { usePatients } from '../../hooks/usePatients';
-import { 
-  Search, 
-  Plus, 
-  Eye, 
-  Edit, 
+import {
+  Search,
+  Plus,
+  Eye,
+  Edit,
   Calendar,
   MapPin,
   UserPlus
@@ -70,7 +70,7 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
               {filteredPatients.length} patient{filteredPatients.length > 1 ? 's' : ''} trouvé{filteredPatients.length > 1 ? 's' : ''}
             </p>
           </div>
-          
+
           <button
             onClick={onAddPatient}
             className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
@@ -92,7 +92,7 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
               className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-          
+
           <select
             value={filtersexe}
             onChange={(e) => setFiltersexe(e.target.value as 'all' | 'Masculin' | 'Féminin')}
@@ -102,7 +102,7 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
             <option value="Masculin">Hommes</option>
             <option value="Féminin">Femmes</option>
           </select>
-          
+
           <select
             value={filterAge}
             onChange={(e) => setFilterAge(e.target.value as 'all' | 'minor' | 'major')}
@@ -136,21 +136,20 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
           <div className="divide-y divide-gray-100">
             {filteredPatients.map((patient) => {
               const age = getAgeFromBirthDate(patient.dateNaissance);
-              
+
               return (
                 <div
                   key={patient.id}
                   className="p-6 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
-                  onClick={() => onPatientSelect(patient.id)}
+                  onClick={() => onPatientSelect(String(patient.id))}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${
-                        patient.sexe === 'Féminin' ? 'bg-pink-500' : 'bg-blue-500'
-                      }`}>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${patient.sexe === 'Féminin' ? 'bg-pink-500' : 'bg-blue-500'
+                        }`}>
                         {patient.prenom[0]}{patient.nom[0]}
                       </div>
-                      
+
                       <div className="flex-1">
                         <div className="flex items-center space-x-3">
                           <h3 className="text-lg font-semibold text-gray-900">
@@ -165,11 +164,11 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
                             </span>
                           )}
                         </div>
-                        
+
                         <p className="text-sm text-gray-600 mb-2">
-                          N° {patient.patientNumber}
+                          N° {patient.id}
                         </p>
-                        
+
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                           {/* <div className="flex items-center space-x-1">
                             <Phone className="h-4 w-4" />
@@ -182,27 +181,27 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
                               <span>{patient.email}</span>
                             </div>
                           )} */}
-                          
+
                           <div className="flex items-center space-x-1">
                             <MapPin className="h-4 w-4" />
-                            <span className="truncate max-w-xs">{patient.address}</span>
+                            <span className="truncate max-w-xs">{patient.adresse}</span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          onPatientSelect(patient.id);
+                          onPatientSelect(String(patient.id));
                         }}
                         className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                         title="Voir le détail"
                       >
                         <Eye className="h-5 w-5" />
                       </button>
-                      
+
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -213,7 +212,7 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
                       >
                         <Edit className="h-5 w-5" />
                       </button>
-                      
+
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

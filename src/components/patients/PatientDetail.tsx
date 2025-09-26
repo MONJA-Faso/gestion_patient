@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePatients } from '../../hooks/usePatients';
 import { useAuth } from '../../hooks/useAuth';
-import { 
-  ArrowLeft, 
-  User, 
-  Phone, 
-  Mail, 
-  MapPin, 
+import {
+  ArrowLeft,
+  User,
+  Phone,
+  Mail,
+  MapPin,
   Calendar,
   FileText,
   Heart,
@@ -25,8 +25,8 @@ interface PatientDetailProps {
 }
 
 export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack }) => {
-  const { 
-    getPatientById, 
+  const {
+    getPatientById,
     getMedicalRecordsByPatientId,
     getPregnancyRecordsByPatientId,
     getMenstrualRecordsByPatientId,
@@ -34,7 +34,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
     addMedicalRecord
   } = usePatients();
   const { user } = useAuth();
-  
+
   const [activeTab, setActiveTab] = useState('overview');
   const [isAddingRecord, setIsAddingRecord] = useState(false);
   const [newRecord, setNewRecord] = useState({
@@ -51,6 +51,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
       height: ''
     }
   });
+
+  console.log("Patient ID :" , patientId);
+  
 
   const patient = getPatientById(patientId);
   const medicalRecords = getMedicalRecordsByPatientId(patientId);
@@ -86,7 +89,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
     return age;
   };
 
-  const age = getAgeFromBirthDate(patient.dateOfBirth);
+  const age = getAgeFromBirthDate(patient.dateNaissance);
 
   const handleAddMedicalRecord = () => {
     if (!newRecord.consultationReason || !newRecord.diagnosis) {
@@ -113,7 +116,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
       }
     };
 
-    addMedicalRecord(record);
+    // addMedicalRecord(record);
     setIsAddingRecord(false);
     setNewRecord({
       consultationReason: '',
@@ -141,6 +144,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
 
   const canAccessMedical = user?.role !== 'Secretaire';
 
+
   return (
     <div className="space-y-6">
       {/* En-tête */}
@@ -153,7 +157,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
             <ArrowLeft className="h-5 w-5" />
             <span>Retour à la liste</span>
           </button>
-          
+
           <div className="flex items-center space-x-2">
             <button className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
               <Edit className="h-4 w-4" />
@@ -163,19 +167,18 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
         </div>
 
         <div className="flex items-center space-x-6">
-          <div className={`w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold ${
-            patient.gender === 'female' ? 'bg-pink-500' : 'bg-blue-500'
-          }`}>
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold ${patient.sexe === 'Féminin' ? 'bg-pink-500' : 'bg-blue-500'
+            }`}>
             {patient.prenom[0]}{patient.nom[0]}
           </div>
-          
+
           <div className="flex-1">
             <div className="flex items-center space-x-3 mb-2">
               <h1 className="text-3xl font-bold text-gray-900">
                 {patient.prenom} {patient.nom}
               </h1>
               <span className="text-lg text-gray-600">
-                ({age} ans, {patient.gender === 'male' ? 'Homme' : 'Femme'})
+                ({age} ans, {patient.sexe === 'Masculin' ? 'Homme' : 'Femme'})
               </span>
               {age < 18 && (
                 <span className="inline-block px-3 py-1 text-sm font-medium bg-orange-100 text-orange-800 rounded-full">
@@ -183,30 +186,19 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                 </span>
               )}
             </div>
-            
-            <p className="text-gray-600 mb-4">N° {patient.patientNumber}</p>
-            
+
+            <p className="text-gray-600 mb-4">N° {patient.id}</p>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-              <div className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-gray-400" />
-                <span>{patient.phone}</span>
-              </div>
-              
-              {patient.email && (
-                <div className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4 text-gray-400" />
-                  <span>{patient.email}</span>
-                </div>
-              )}
-              
+
               <div className="flex items-center space-x-2">
                 <Calendar className="h-4 w-4 text-gray-400" />
-                <span>{new Date(patient.dateOfBirth).toLocaleDateString('fr-FR')}</span>
+                <span>{new Date(patient.dateNaissance).toLocaleDateString('fr-FR')}</span>
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4 text-gray-400" />
-                <span className="truncate">{patient.address}</span>
+                <span className="truncate">{patient.adresse}</span>
               </div>
             </div>
           </div>
@@ -227,13 +219,12 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                   key={tab.id}
                   onClick={() => isAccessible && setActiveTab(tab.id)}
                   disabled={!isAccessible}
-                  className={`flex items-center whitespace-nowrap space-x-2 py-4 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                    isActive
-                      ? 'border-blue-500 text-blue-600'
-                      : isAccessible
-                        ? 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        : 'border-transparent text-gray-300 cursor-not-allowed'
-                  }`}
+                  className={`flex items-center whitespace-nowrap space-x-2 py-4 border-b-2 font-medium text-sm transition-colors duration-200 ${isActive
+                    ? 'border-blue-500 text-blue-600'
+                    : isAccessible
+                      ? 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      : 'border-transparent text-gray-300 cursor-not-allowed'
+                    }`}
                 >
                   <Icon className="h-5 w-5 flex-shrink-0" />
                   <span>{tab.label}</span>
@@ -259,15 +250,15 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-700">Date de naissance</label>
-                      <p className="text-gray-900">{new Date(patient.dateOfBirth).toLocaleDateString('fr-FR')}</p>
+                      <p className="text-gray-900">{new Date(patient.dateNaissance).toLocaleDateString('fr-FR')}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-700">Genre</label>
-                      <p className="text-gray-900">{patient.gender === 'male' ? 'Homme' : 'Femme'}</p>
+                      <p className="text-gray-900">{patient.sexe === 'Masculin' ? 'Homme' : 'Femme'}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-700">Adresse</label>
-                      <p className="text-gray-900">{patient.address}</p>
+                      <p className="text-gray-900">{patient.adresse}</p>
                     </div>
                   </div>
                 </div>
@@ -275,32 +266,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact</h3>
                   <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Téléphone</label>
-                      <p className="text-gray-900">{patient.phone}</p>
-                    </div>
-                    {patient.email && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Email</label>
-                        <p className="text-gray-900">{patient.email}</p>
-                      </div>
-                    )}
+
                   </div>
 
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 mt-6">Contact d'urgence</h3>
                   <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Nom</label>
-                      <p className="text-gray-900">{patient.emergencyContact.name}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Téléphone</label>
-                      <p className="text-gray-900">{patient.emergencyContact.phone}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Relation</label>
-                      <p className="text-gray-900">{patient.emergencyContact.relationship}</p>
-                    </div>
+                    //! TEst Affichage
+                    LEEEEEEE
                   </div>
                 </div>
               </div>
@@ -396,8 +368,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                           type="number"
                           step="0.1"
                           value={newRecord.vitals.temperature}
-                          onChange={(e) => setNewRecord({ 
-                            ...newRecord, 
+                          onChange={(e) => setNewRecord({
+                            ...newRecord,
                             vitals: { ...newRecord.vitals, temperature: e.target.value }
                           })}
                           className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
@@ -409,8 +381,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                         <input
                           type="text"
                           value={newRecord.vitals.bloodPressure}
-                          onChange={(e) => setNewRecord({ 
-                            ...newRecord, 
+                          onChange={(e) => setNewRecord({
+                            ...newRecord,
                             vitals: { ...newRecord.vitals, bloodPressure: e.target.value }
                           })}
                           className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
@@ -422,8 +394,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                         <input
                           type="number"
                           value={newRecord.vitals.heartRate}
-                          onChange={(e) => setNewRecord({ 
-                            ...newRecord, 
+                          onChange={(e) => setNewRecord({
+                            ...newRecord,
                             vitals: { ...newRecord.vitals, heartRate: e.target.value }
                           })}
                           className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
@@ -436,8 +408,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                           type="number"
                           step="0.1"
                           value={newRecord.vitals.weight}
-                          onChange={(e) => setNewRecord({ 
-                            ...newRecord, 
+                          onChange={(e) => setNewRecord({
+                            ...newRecord,
                             vitals: { ...newRecord.vitals, weight: e.target.value }
                           })}
                           className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
@@ -449,8 +421,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                         <input
                           type="number"
                           value={newRecord.vitals.height}
-                          onChange={(e) => setNewRecord({ 
-                            ...newRecord, 
+                          onChange={(e) => setNewRecord({
+                            ...newRecord,
                             vitals: { ...newRecord.vitals, height: e.target.value }
                           })}
                           className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
@@ -588,7 +560,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
           {activeTab === 'pregnancy' && canAccessMedical && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900">Suivi de Grossesse</h3>
-              
+
               {pregnancyRecords.length === 0 ? (
                 <div className="text-center py-8">
                   <Baby className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -603,15 +575,14 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                         <h4 className="font-semibold text-gray-900">
                           Grossesse #{pregnancy.pregnancyNumber}
                         </h4>
-                        <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                          pregnancy.status === 'active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`px-3 py-1 text-sm font-medium rounded-full ${pregnancy.status === 'active'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
+                          }`}>
                           {pregnancy.status === 'active' ? 'En cours' : 'Terminée'}
                         </span>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                           <label className="text-sm font-medium text-gray-700">Date de début</label>
@@ -650,10 +621,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
             </div>
           )}
 
-          {activeTab === 'menstrual' && canAccessMedical && patient.gender === 'female' && (
+          {activeTab === 'menstrual' && canAccessMedical && patient.sexe === 'Féminin' && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900">Suivi du Cycle Menstruel</h3>
-              
+
               {menstrualRecords.length === 0 ? (
                 <div className="text-center py-8">
                   <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -699,7 +670,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
           {activeTab === 'chronic' && canAccessMedical && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900">Pathologies Chroniques</h3>
-              
+
               {chronicConditions.length === 0 ? (
                 <div className="text-center py-8">
                   <Activity className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -712,18 +683,17 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                     <div key={condition.id} className="bg-white border border-gray-200 rounded-lg p-6">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold text-gray-900">{condition.condition}</h4>
-                        <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                          condition.status === 'active' 
-                            ? 'bg-red-100 text-red-800'
-                            : condition.status === 'remission'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-green-100 text-green-800'
-                        }`}>
-                          {condition.status === 'active' ? 'Actif' : 
-                           condition.status === 'remission' ? 'En rémission' : 'Guéri'}
+                        <span className={`px-3 py-1 text-sm font-medium rounded-full ${condition.status === 'active'
+                          ? 'bg-red-100 text-red-800'
+                          : condition.status === 'remission'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-green-100 text-green-800'
+                          }`}>
+                          {condition.status === 'active' ? 'Actif' :
+                            condition.status === 'remission' ? 'En rémission' : 'Guéri'}
                         </span>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                           <label className="text-sm font-medium text-gray-700">Date de diagnostic</label>

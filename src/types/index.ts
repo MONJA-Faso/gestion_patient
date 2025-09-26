@@ -29,16 +29,17 @@ export interface RegisterUserResponse {
     token?: string;
 }
 
+// Dans types.ts
 export interface Patient {
-  id: string;
-  patientNumber: string;
-  prenom: string;
+  id: string | number;
   nom: string;
-  sexe: 'Masculin' | 'Féminin';
+  prenom: string;
   dateNaissance: string;
-  adresse: string;
-  createdAt: string;
-  updatedAt: string;
+  sexe: 'Masculin' | 'Féminin';
+  adresse?: string;
+  patientNumber?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface MedicalRecord {

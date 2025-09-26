@@ -1,5 +1,5 @@
 import axios from "axios";
-import { User, RegisterUserData, RegisterUserResponse, LoginResponse } from "../types";
+import { User, RegisterUserData, RegisterUserResponse, LoginResponse, Patient } from "../types";
 
 // parse les données à envoyer au backend
 interface ParsedRegisterUserData {
@@ -211,7 +211,7 @@ export const getAllPatients = async (): Promise<any[]> => {
     return response.data;
 }
 
-export const getPatientById = async (id: string): Promise<any> => {
+export const getPatientDetails = async (id: string): Promise<Patient> => {
     const token = localStorage.getItem('medcare_token');
     const response = await api.get<any>(`/patients/${id}`, {
         headers: {
