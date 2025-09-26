@@ -175,3 +175,28 @@ export const toggleSingleUserStatus = async (id: string, userStatus: boolean): P
 
     return response.data
 }
+
+// Patients
+
+export const createPatient = async (patientData: Omit<any, 'id' | 'createdAt' | 'updatedAt'>): Promise<any> => {
+    const token = localStorage.getItem('medcare_token');
+
+    const formatedPatientData = {
+        prenom: patientData.prenom,
+        nom: patientData.nom,
+        sexe: patientData.sexe,
+        dateNaissance: patientData.dateNaissance,
+        adresse: patientData.adresse
+    }
+
+    console.log("formatedPatientData:", formatedPatientData);
+    
+
+    const response = await api.post<any>('/patients/create', formatedPatientData, {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+
+    return response.data;
+}

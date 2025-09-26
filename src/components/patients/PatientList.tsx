@@ -23,7 +23,7 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
   const { patients, loading, searchPatients } = usePatients();
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterGender, setFilterGender] = useState<'all' | 'male' | 'female'>('all');
+  const [filtersexe, setFiltersexe] = useState<'all' | 'Masculin' | 'Féminin'>('all');
   const [filterAge, setFilterAge] = useState<'all' | 'minor' | 'major'>('all');
 
   const getAgeFromBirthDate = (birthDate: string) => {
@@ -40,18 +40,18 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
   const getFilteredPatients = () => {
     let filteredPatients = searchQuery ? searchPatients(searchQuery) : patients;
 
-    if (filterGender !== 'all') {
-      filteredPatients = filteredPatients.filter(p => p.gender === filterGender);
+    if (filtersexe !== 'all') {
+      filteredPatients = filteredPatients.filter(p => p.sexe === filtersexe);
     }
 
     if (filterAge !== 'all') {
       filteredPatients = filteredPatients.filter(p => {
-        const age = getAgeFromBirthDate(p.dateOfBirth);
+        const age = getAgeFromBirthDate(p.dateNaissance);
         return filterAge === 'minor' ? age < 18 : age >= 18;
       });
     }
 
-    return filteredPatients.sort((a, b) => a.lastName.localeCompare(b.lastName));
+    return filteredPatients.sort((a, b) => a.nom.localeCompare(b.nom));
   };
 
   if (loading) {
@@ -99,13 +99,13 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
           </div>
           
           <select
-            value={filterGender}
-            onChange={(e) => setFilterGender(e.target.value as 'all' | 'male' | 'female')}
+            value={filtersexe}
+            onChange={(e) => setFiltersexe(e.target.value as 'all' | 'Masculin' | 'Féminin')}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="all">Tous les genres</option>
-            <option value="male">Hommes</option>
-            <option value="female">Femmes</option>
+            <option value="Masculin">Hommes</option>
+            <option value="Féminin">Femmes</option>
           </select>
           
           <select
@@ -140,7 +140,7 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
         ) : (
           <div className="divide-y divide-gray-100">
             {filteredPatients.map((patient) => {
-              const age = getAgeFromBirthDate(patient.dateOfBirth);
+              const age = getAgeFromBirthDate(patient.dateNaissance);
               
               return (
                 <div
@@ -151,18 +151,18 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${
-                        patient.gender === 'female' ? 'bg-pink-500' : 'bg-blue-500'
+                        patient.sexe === 'Féminin' ? 'bg-pink-500' : 'bg-blue-500'
                       }`}>
-                        {patient.firstName[0]}{patient.lastName[0]}
+                        {patient.prenom[0]}{patient.nom[0]}
                       </div>
                       
                       <div className="flex-1">
                         <div className="flex items-center space-x-3">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            {patient.firstName} {patient.lastName}
+                            {patient.prenom} {patient.nom}
                           </h3>
                           <span className="text-sm text-gray-500">
-                            ({age} ans, {patient.gender === 'male' ? 'H' : 'F'})
+                            ({age} ans, {patient.sexe === 'Masculin' ? 'H' : 'F'})
                           </span>
                           {age < 18 && (
                             <span className="inline-block px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
@@ -176,7 +176,7 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
                         </p>
                         
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                          <div className="flex items-center space-x-1">
+                          {/* <div className="flex items-center space-x-1">
                             <Phone className="h-4 w-4" />
                             <span>{patient.phone}</span>
                           </div>
@@ -186,7 +186,7 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
                               <Mail className="h-4 w-4" />
                               <span>{patient.email}</span>
                             </div>
-                          )}
+                          )} */}
                           
                           <div className="flex items-center space-x-1">
                             <MapPin className="h-4 w-4" />

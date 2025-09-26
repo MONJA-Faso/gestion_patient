@@ -114,11 +114,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
                 }}
                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
+                    ? 'bg-blue-50 text-green-600 border-r-4 border-green-500'
                     : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
-                <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                <Icon className={`h-5 w-5 ${isActive ? 'text-green-500' : 'text-gray-400'}`} />
                 <span className="font-medium">{item.label}</span>
               </button>
             );

@@ -34,16 +34,9 @@ export interface Patient {
   patientNumber: string;
   prenom: string;
   nom: string;
-  gender: 'male' | 'female';
-  dateOfBirth: string;
-  address: string;
-  phone: string;
-  email?: string;
-  emergencyContact: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
+  sexe: 'Masculin' | 'Féminin';
+  dateNaissance: string;
+  adresse: string;
   createdAt: string;
   updatedAt: string;
 }

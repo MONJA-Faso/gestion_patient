@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Patient, MedicalRecord, PregnancyRecord, MenstrualCycleRecord, ChronicCondition } from '../types';
 import { mockPatients, mockMedicalRecords, mockPregnancyRecords, mockMenstrualRecords, mockChronicConditions } from '../data/mockData';
+import { createPatient } from '../api/ApiCenter';
 
 export const usePatients = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -45,22 +46,16 @@ export const usePatients = () => {
   const searchPatients = (query: string) => {
     const lowercaseQuery = query.toLowerCase();
     return patients.filter(patient => 
-      patient.firstName.toLowerCase().includes(lowercaseQuery) ||
-      patient.lastName.toLowerCase().includes(lowercaseQuery) ||
-      patient.patientNumber.toLowerCase().includes(lowercaseQuery) ||
-      patient.phone.includes(query)
+      patient.prenom.toLowerCase().includes(lowercaseQuery) ||
+      patient.nom.toLowerCase().includes(lowercaseQuery) ||
+      patient.patientNumber.toLowerCase().includes(lowercaseQuery)
     );
   };
 
   const addPatient = (patient: Omit<Patient, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newPatient: Patient = {
-      ...patient,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    setPatients(prev => [...prev, newPatient]);
-    return newPatient;
+    createPatient(patient).then( () => {
+      setPatients(prev => [...prev, patient as Patient]);
+    })
   };
 
   const updatePatient = (id: string, updates: Partial<Patient>) => {

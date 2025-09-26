@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePatients } from '../../hooks/usePatients';
-import { ArrowLeft, Save, User, Phone, Mail, MapPin, UserPlus } from 'lucide-react';
+import { ArrowLeft, Save, User, MapPin } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 interface AddPatientFormProps {
   onBack: () => void;
@@ -11,18 +12,11 @@ export const AddPatientForm: React.FC<AddPatientFormProps> = ({ onBack, onPatien
   const { addPatient } = usePatients();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    gender: 'female' as 'male' | 'female',
-    dateOfBirth: '',
-    address: '',
-    phone: '',
-    email: '',
-    emergencyContact: {
-      name: '',
-      phone: '',
-      relationship: ''
-    }
+    nom: '',
+    prenom: '',
+    sexe: 'Féminin' as 'Féminin' | 'Masculin',
+    dateNaissance: '',
+    adresse: ''
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -30,48 +24,26 @@ export const AddPatientForm: React.FC<AddPatientFormProps> = ({ onBack, onPatien
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'Le prénom est obligatoire';
+    if (!formData.prenom.trim()) {
+      newErrors.prenom = 'Le prénom est obligatoire';
     }
 
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Le nom est obligatoire';
+    if (!formData.nom.trim()) {
+      newErrors.nom = 'Le nom est obligatoire';
     }
 
-    if (!formData.dateOfBirth) {
-      newErrors.dateOfBirth = 'La date de naissance est obligatoire';
+    if (!formData.dateNaissance) {
+      newErrors.dateNaissance = 'La date de naissance est obligatoire';
     } else {
-      const birthDate = new Date(formData.dateOfBirth);
+      const birthDate = new Date(formData.dateNaissance);
       const today = new Date();
       if (birthDate > today) {
-        newErrors.dateOfBirth = 'La date de naissance ne peut pas être dans le futur';
+        newErrors.dateNaissance = 'La date de naissance ne peut pas être dans le futur';
       }
     }
 
-    if (!formData.address.trim()) {
-      newErrors.address = 'L\'adresse est obligatoire';
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Le numéro de téléphone est obligatoire';
-    } else if (!/^[\d\s+()-]+$/.test(formData.phone)) {
-      newErrors.phone = 'Format de téléphone invalide';
-    }
-
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Format d\'email invalide';
-    }
-
-    if (!formData.emergencyContact.name.trim()) {
-      newErrors.emergencyContactName = 'Le nom du contact d\'urgence est obligatoire';
-    }
-
-    if (!formData.emergencyContact.phone.trim()) {
-      newErrors.emergencyContactPhone = 'Le téléphone du contact d\'urgence est obligatoire';
-    }
-
-    if (!formData.emergencyContact.relationship.trim()) {
-      newErrors.emergencyContactRelationship = 'La relation avec le contact d\'urgence est obligatoire';
+    if (!formData.adresse.trim()) {
+      newErrors.adresse = 'L\'adresse est obligatoire';
     }
 
     setErrors(newErrors);
@@ -84,6 +56,17 @@ export const AddPatientForm: React.FC<AddPatientFormProps> = ({ onBack, onPatien
     return `PAT-${year}-${random}`;
   };
 
+  const resetForm = () => {
+    setFormData({
+      nom: '',
+      prenom: '',
+      sexe: 'Féminin',
+      dateNaissance: '',
+      adresse: ''
+    });
+    setErrors({});
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -94,38 +77,51 @@ export const AddPatientForm: React.FC<AddPatientFormProps> = ({ onBack, onPatien
     setIsSubmitting(true);
 
     try {
-      // Simulation d'une API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
       const newPatient = addPatient({
-        ...formData,
-        patientNumber: generatePatientNumber()
+        patientNumber: generatePatientNumber(),
+        prenom: formData.prenom.trim(),
+        nom: formData.nom.trim(),
+        sexe: formData.sexe,
+        dateNaissance: new Date(formData.dateNaissance + 'T00:00:00.000Z').toISOString(),
+        adresse: formData.adresse.trim()
       });
 
-      onPatientAdded(newPatient.id);
+      console.log("patient added:", newPatient);
+      
+      // Afficher l'alerte de succès
+      await Swal.fire({
+        title: 'Succès !',
+        text: 'Le patient a été créé avec succès',
+        icon: 'success',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#2563eb',
+      });
+
+      // Vider le formulaire
+      resetForm();
+
+
     } catch (error) {
       console.error('Erreur lors de l\'ajout du patient:', error);
+      
+      // Afficher l'alerte d'erreur
+      await Swal.fire({
+        title: 'Erreur !',
+        text: 'Une erreur est survenue lors de la création du patient. Veuillez réessayer.',
+        icon: 'error',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#dc2626',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleInputChange = (field: string, value: string) => {
-    if (field.startsWith('emergencyContact.')) {
-      const contactField = field.split('.')[1];
-      setFormData({
-        ...formData,
-        emergencyContact: {
-          ...formData.emergencyContact,
-          [contactField]: value
-        }
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [field]: value
-      });
-    }
+    setFormData({
+      ...formData,
+      [field]: value
+    });
 
     // Clear error when user starts typing
     if (errors[field]) {
@@ -151,7 +147,7 @@ export const AddPatientForm: React.FC<AddPatientFormProps> = ({ onBack, onPatien
           
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <UserPlus className="h-6 w-6 text-blue-600" />
+              <User className="h-6 w-6 text-blue-600" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Nouveau Patient</h1>
@@ -173,73 +169,73 @@ export const AddPatientForm: React.FC<AddPatientFormProps> = ({ onBack, onPatien
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="prenom" className="block text-sm font-medium text-gray-700 mb-2">
                   Prénom *
                 </label>
                 <input
                   type="text"
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) => handleInputChange('firstName', e.target.value)}
+                  id="prenom"
+                  value={formData.prenom}
+                  onChange={(e) => handleInputChange('prenom', e.target.value)}
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    errors.prenom ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
                   placeholder="Prénom du patient"
                 />
-                {errors.firstName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
+                {errors.prenom && (
+                  <p className="mt-1 text-sm text-red-600">{errors.prenom}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="nom" className="block text-sm font-medium text-gray-700 mb-2">
                   Nom *
                 </label>
                 <input
                   type="text"
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) => handleInputChange('lastName', e.target.value)}
+                  id="nom"
+                  value={formData.nom}
+                  onChange={(e) => handleInputChange('nom', e.target.value)}
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    errors.nom ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
                   placeholder="Nom du patient"
                 />
-                {errors.lastName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
+                {errors.nom && (
+                  <p className="mt-1 text-sm text-red-600">{errors.nom}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="sexe" className="block text-sm font-medium text-gray-700 mb-2">
                   Genre *
                 </label>
                 <select
-                  id="gender"
-                  value={formData.gender}
-                  onChange={(e) => handleInputChange('gender', e.target.value)}
+                  id="sexe"
+                  value={formData.sexe}
+                  onChange={(e) => handleInputChange('sexe', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="female">Femme</option>
-                  <option value="male">Homme</option>
+                  <option value="Féminin">Femme</option>
+                  <option value="Masculin">Homme</option>
                 </select>
               </div>
 
               <div>
-                <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="dateNaissance" className="block text-sm font-medium text-gray-700 mb-2">
                   Date de naissance *
                 </label>
                 <input
                   type="date"
-                  id="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
+                  id="dateNaissance"
+                  value={formData.dateNaissance}
+                  onChange={(e) => handleInputChange('dateNaissance', e.target.value)}
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    errors.dateOfBirth ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    errors.dateNaissance ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
                 />
-                {errors.dateOfBirth && (
-                  <p className="mt-1 text-sm text-red-600">{errors.dateOfBirth}</p>
+                {errors.dateNaissance && (
+                  <p className="mt-1 text-sm text-red-600">{errors.dateNaissance}</p>
                 )}
               </div>
             </div>
@@ -247,147 +243,23 @@ export const AddPatientForm: React.FC<AddPatientFormProps> = ({ onBack, onPatien
             <div className="mt-6">
               <div className="flex items-center space-x-2 mb-2">
                 <MapPin className="h-4 w-4 text-gray-400" />
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="adresse" className="block text-sm font-medium text-gray-700">
                   Adresse complète *
                 </label>
               </div>
               <textarea
-                id="address"
-                value={formData.address}
-                onChange={(e) => handleInputChange('address', e.target.value)}
+                id="adresse"
+                value={formData.adresse}
+                onChange={(e) => handleInputChange('adresse', e.target.value)}
                 rows={3}
                 className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                  errors.address ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  errors.adresse ? 'border-red-300 bg-red-50' : 'border-gray-300'
                 }`}
                 placeholder="Adresse complète du patient"
               />
-              {errors.address && (
-                <p className="mt-1 text-sm text-red-600">{errors.address}</p>
+              {errors.adresse && (
+                <p className="mt-1 text-sm text-red-600">{errors.adresse}</p>
               )}
-            </div>
-          </div>
-
-          {/* Informations de contact */}
-          <div>
-            <div className="flex items-center space-x-2 mb-6">
-              <Phone className="h-5 w-5 text-blue-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Informations de Contact</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                  Téléphone *
-                </label>
-                <input
-                  type="tel"
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                  placeholder="Ex: 01 23 45 67 89"
-                />
-                {errors.phone && (
-                  <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  Email (optionnel)
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                  placeholder="patient@email.com"
-                />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Contact d'urgence */}
-          <div>
-            <div className="flex items-center space-x-2 mb-6">
-              <UserPlus className="h-5 w-5 text-blue-600" />
-              <h3 className="text-lg font-semibold text-gray-900">Contact d'Urgence</h3>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <label htmlFor="emergencyContactName" className="block text-sm font-medium text-gray-700 mb-2">
-                  Nom complet *
-                </label>
-                <input
-                  type="text"
-                  id="emergencyContactName"
-                  value={formData.emergencyContact.name}
-                  onChange={(e) => handleInputChange('emergencyContact.name', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    errors.emergencyContactName ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                  placeholder="Nom du contact d'urgence"
-                />
-                {errors.emergencyContactName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.emergencyContactName}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="emergencyContactPhone" className="block text-sm font-medium text-gray-700 mb-2">
-                  Téléphone *
-                </label>
-                <input
-                  type="tel"
-                  id="emergencyContactPhone"
-                  value={formData.emergencyContact.phone}
-                  onChange={(e) => handleInputChange('emergencyContact.phone', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    errors.emergencyContactPhone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                  placeholder="Ex: 01 23 45 67 89"
-                />
-                {errors.emergencyContactPhone && (
-                  <p className="mt-1 text-sm text-red-600">{errors.emergencyContactPhone}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="emergencyContactRelationship" className="block text-sm font-medium text-gray-700 mb-2">
-                  Relation *
-                </label>
-                <select
-                  id="emergencyContactRelationship"
-                  value={formData.emergencyContact.relationship}
-                  onChange={(e) => handleInputChange('emergencyContact.relationship', e.target.value)}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                    errors.emergencyContactRelationship ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">Sélectionner...</option>
-                  <option value="Époux/Épouse">Époux/Épouse</option>
-                  <option value="Père">Père</option>
-                  <option value="Mère">Mère</option>
-                  <option value="Fils">Fils</option>
-                  <option value="Fille">Fille</option>
-                  <option value="Frère">Frère</option>
-                  <option value="Sœur">Sœur</option>
-                  <option value="Ami proche">Ami proche</option>
-                  <option value="Autre">Autre</option>
-                </select>
-                {errors.emergencyContactRelationship && (
-                  <p className="mt-1 text-sm text-red-600">{errors.emergencyContactRelationship}</p>
-                )}
-              </div>
             </div>
           </div>
 

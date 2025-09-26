@@ -103,7 +103,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
       dosage: newRecord.dosage,
       notes: newRecord.notes,
       doctorId: user!.id,
-      nurseId: user!.role === 'nurse' ? user!.id : undefined,
+      InfirmiereId: user!.role === 'Infirmiere' ? user!.id : undefined,
       vitals: {
         temperature: newRecord.vitals.temperature ? parseFloat(newRecord.vitals.temperature) : undefined,
         bloodPressure: newRecord.vitals.bloodPressure || undefined,
@@ -139,7 +139,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
     { id: 'chronic', label: 'Pathologies', icon: Activity }
   ];
 
-  const canAccessMedical = user?.role !== 'secretary';
+  const canAccessMedical = user?.role !== 'Secretaire';
 
   return (
     <div className="space-y-6">
@@ -166,13 +166,13 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
           <div className={`w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold ${
             patient.gender === 'female' ? 'bg-pink-500' : 'bg-blue-500'
           }`}>
-            {patient.firstName[0]}{patient.lastName[0]}
+            {patient.prenom[0]}{patient.nom[0]}
           </div>
           
           <div className="flex-1">
             <div className="flex items-center space-x-3 mb-2">
               <h1 className="text-3xl font-bold text-gray-900">
-                {patient.firstName} {patient.lastName}
+                {patient.prenom} {patient.nom}
               </h1>
               <span className="text-lg text-gray-600">
                 ({age} ans, {patient.gender === 'male' ? 'Homme' : 'Femme'})
@@ -255,7 +255,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                   <div className="space-y-3">
                     <div>
                       <label className="text-sm font-medium text-gray-700">Nom complet</label>
-                      <p className="text-gray-900">{patient.firstName} {patient.lastName}</p>
+                      <p className="text-gray-900">{patient.prenom} {patient.nom}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-700">Date de naissance</label>
