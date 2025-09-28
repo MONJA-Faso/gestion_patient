@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Patient, MedicalRecord, PregnancyRecord, MenstrualCycleRecord, ChronicCondition } from '../types';
-import { mockPatients, mockMedicalRecords, mockPregnancyRecords, mockMenstrualRecords, mockChronicConditions } from '../data/mockData';
-import { createPatient, getAllPatients, getPatientDetails } from '../api/ApiCenter';
+import { mockMedicalRecords, mockPregnancyRecords, mockMenstrualRecords, mockChronicConditions } from '../data/mockData';
+import { createPatient, deleteSinglePatient, getAllPatients, updateSignlePatient } from '../api/ApiCenter';
 
 export const usePatients = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -41,10 +41,6 @@ export const usePatients = () => {
       const cleanId = id.replace(/\D/g, ''); // Supprimer tout sauf les chiffres
       normalizedId = cleanId ? parseInt(cleanId) : id;
     }
-
-    console.log("Patient ID recherché:", normalizedId);
-    console.log("Type de l'ID:", typeof normalizedId);
-    console.log("Liste des patients disponibles:", patients);
 
     const patient = patients.find(p => {
       // Comparaison flexible selon le type
@@ -93,10 +89,41 @@ export const usePatients = () => {
     }
   };
 
-  const updatePatient = (id: string, updates: Partial<Patient>) => {
-    setPatients(prev => prev.map(p =>
-      p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
-    ));
+  const deletePatient = async (id: string | number) => {
+    try {
+      deleteSinglePatient(id.toString());
+
+      setLoading(true);
+      const patientsData = await getAllPatients();
+      setPatients(patientsData);
+
+      setTimeout(() => {
+        setPatients(patientsData);
+        setLoading(false)
+      }, 1000);
+
+    } catch (error: any) {
+      console.error("Erreur lors de la suppression du patient:", error.message);
+      throw error;
+    }
+  }
+
+  const updatePatient = async (id: string, updates: Partial<Patient>) => {
+    try {
+
+      const updatedPatient = await updateSignlePatient(id, updates);
+
+      // Mettre à jour l'état local
+      setPatients(prev => prev.map(patient =>
+        patient.id.toString() === id ? { ...patient, ...updatedPatient } : patient
+      ));
+
+      return updatedPatient;
+      
+    } catch (error: any) {
+      console.error("Erreur lors de la modification:", error);
+      throw error;
+    }
   };
 
   const addMedicalRecord = (record: Omit<MedicalRecord, 'id'>) => {
@@ -122,6 +149,7 @@ export const usePatients = () => {
     getChronicConditionsByPatientId,
     searchPatients,
     addPatient,
+    deletePatient,
     updatePatient,
     addMedicalRecord
   };

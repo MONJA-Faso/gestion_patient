@@ -16,6 +16,7 @@ const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
   const [showAddPatient, setShowAddPatient] = useState(false);
 
   const [isRegister, setIsRegister] = useState(false);
@@ -33,7 +34,7 @@ const AppContent: React.FC = () => {
 
   if (!user) {
     if (!isRegister) {
-      return <LoginForm isRegister={isRegister} setIsRegister={setIsRegister}/>;
+      return <LoginForm isRegister={isRegister} setIsRegister={setIsRegister} />;
     } else {
       return <RegisterForm isRegister={isRegister} setIsRegister={setIsRegister} />;
     }
@@ -44,15 +45,14 @@ const AppContent: React.FC = () => {
     setCurrentPage('patient-detail');
   };
 
-  const handleAddPatient = () => {
+  const handleAddPatient = (patient?: any) => {
+    if (patient) {
+      setSelectedPatient(patient);
+    } else {
+      setSelectedPatient(null);
+    }
     setShowAddPatient(true);
     setCurrentPage('add-patient');
-  };
-
-  const handlePatientAdded = (patientId: string) => {
-    setShowAddPatient(false);
-    setSelectedPatientId(patientId);
-    setCurrentPage('patient-detail');
   };
 
   const handleBackToPatients = () => {
@@ -75,7 +75,8 @@ const AppContent: React.FC = () => {
       return (
         <AddPatientForm
           onBack={handleBackToPatients}
-          onPatientAdded={handlePatientAdded}
+          onPatientAdded={handleBackToPatients}
+          patientInfo={selectedPatient}
         />
       );
     }

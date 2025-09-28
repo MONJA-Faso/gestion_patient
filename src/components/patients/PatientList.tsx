@@ -7,16 +7,18 @@ import {
   Edit,
   Calendar,
   MapPin,
-  UserPlus
+  UserPlus,
+  Trash2
 } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 interface PatientListProps {
   onPatientSelect: (patientId: string) => void;
-  onAddPatient: () => void;
+  onAddPatient: (patient?:any) => void;
 }
 
 export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAddPatient }) => {
-  const { patients, loading, searchPatients } = usePatients();
+  const { patients, loading, searchPatients, deletePatient } = usePatients();
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersexe, setFiltersexe] = useState<'all' | 'Masculin' | 'Féminin'>('all');
   const [filterAge, setFilterAge] = useState<'all' | 'minor' | 'major'>('all');
@@ -49,6 +51,24 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
     return filteredPatients.sort((a, b) => a.nom.localeCompare(b.nom));
   };
 
+  const handleDeletePatient = (patientId: string) => {
+    Swal.fire({
+      title: 'Êtes-vous sûr ?',
+      text: "Cette action supprimera définitivement le patient.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Oui, supprimer',
+      cancelButtonText: 'Annuler'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deletePatient(patientId);
+        Swal.fire('Supprimé !', 'Le patient a été supprimé.', 'success');
+      }
+    });
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -72,7 +92,7 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
           </div>
 
           <button
-            onClick={onAddPatient}
+            onClick={() => onAddPatient(null)}
             className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
           >
             <Plus className="h-5 w-5" />
@@ -201,18 +221,6 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
                       >
                         <Eye className="h-5 w-5" />
                       </button>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // TODO: Implémenter l'édition
-                        }}
-                        className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
-                        title="Modifier"
-                      >
-                        <Edit className="h-5 w-5" />
-                      </button>
-
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -222,6 +230,27 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
                         title="Rendez-vous"
                       >
                         <Calendar className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // onPatientSelect(String(patient.id));
+                          onAddPatient(patient)
+                        }}
+                        className="p-2 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors duration-200"
+                        title="Modifier"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeletePatient(String(patient.id));
+                        }}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="h-5 w-5" />
                       </button>
                     </div>
                   </div>

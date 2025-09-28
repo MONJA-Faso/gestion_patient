@@ -143,6 +143,13 @@ export const createPatient = async (
     return data;
 };
 
+export const updateSignlePatient = async (id: string, updates: Partial<Patient>): Promise<Patient> => {
+    const { data } = await api.put<Patient>(`/patients/${id}`,updates, {
+        headers: authHeader()
+    });
+    return data;
+}
+
 export const getAllPatients = async (): Promise<any[]> => {
     const { data } = await api.get<any[]>('/patients/', {
         headers: authHeader()
@@ -157,7 +164,7 @@ export const getPatientDetails = async (id: string): Promise<Patient> => {
     return data;
 };
 
-export const deletePatient = async (id: string): Promise<string> => {
+export const deleteSinglePatient = async (id: string): Promise<string> => {
     const { data } = await api.delete(`/patients/${id}`, {
         headers: authHeader()
     });
