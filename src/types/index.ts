@@ -6,13 +6,13 @@ export interface User {
   email: string;
   isActive: boolean;
   createdAt: string;
-  updatedAt : string;
+  updatedAt: string;
 }
 
 export interface LoginResponse {
-    email: string;
-    token: string;
-    id: number;
+  email: string;
+  token: string;
+  id: number;
 }
 
 export interface RegisterUserData {
@@ -24,9 +24,9 @@ export interface RegisterUserData {
 }
 
 export interface RegisterUserResponse {
-    user: User;
-    message: string;
-    token?: string;
+  user: User;
+  message: string;
+  token?: string;
 }
 
 // Dans types.ts
@@ -101,14 +101,22 @@ export interface ChronicCondition {
 }
 
 export interface Appointment {
-  id: string;
-  patientId: string;
-  doctorId: string;
-  appointmentDate: string;
-  appointmentTime: string;
-  reason: string;
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no-show';
-  notes?: string;
+  id: string | number;
+  patientId: string | number;
+  medecinId: string | number;
+  dateHeure: string;
+  motif: string;
+  statut: 'PROGRAMME' | 'CONFIRME' | 'TERMINE' | 'ANNULE' | 'ABSENT';
+  notes?: string | null;
+  duree: number;
+  patient?: {
+    nom: string;
+    prenom: string;
+  };
+  medecin?: {
+    nom: string;
+    prenom: string;
+  };
 }
 
 export interface Report {

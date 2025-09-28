@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAppointments } from '../../hooks/useAppointments';
 import { usePatients } from '../../hooks/usePatients';
 import { useUsers } from '../../hooks/useUsers';
-import { useAuth } from '../../hooks/useAuth';
+// import { useAuth } from '../../hooks/useAuth';
 import { 
   Calendar, 
   Plus, 
@@ -13,29 +13,28 @@ import {
   AlertCircle,
   Edit,
   Trash2,
-  Search,
-  Filter
+  Search
 } from 'lucide-react';
 
 export const AppointmentManagement: React.FC = () => {
   const { appointments, addAppointment, updateAppointment, deleteAppointment, loading } = useAppointments();
   const { patients } = usePatients();
   const { users } = useUsers();
-  const { user: currentUser } = useAuth();
+  // const { user: currentUser } = useAuth();
   
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [isAddingAppointment, setIsAddingAppointment] = useState(false);
-  const [editingAppointment, setEditingAppointment] = useState<string | null>(null);
-  const [filterStatus, setFilterStatus] = useState<'all' | 'scheduled' | 'completed' | 'cancelled'>('all');
+  const [editingAppointment, setEditingAppointment] = useState<string | number | null>(null);
+  const [filterStatus, setFilterStatus] = useState<'all' | 'PROGRAMME' | 'TERMINE' | 'ANNULE' | 'ABSENT'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   
   const [newAppointment, setNewAppointment] = useState({
     patientId: '',
-    doctorId: '',
-    appointmentDate: selectedDate,
-    appointmentTime: '',
-    reason: '',
-    notes: ''
+    medecinId: '',
+    dateHeure: '',
+    motif: '',
+    notes: '',
+    duree: 30 // Durée par défaut de 30 minutes
   });
 
   if (loading) {
@@ -48,103 +47,115 @@ export const AppointmentManagement: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'scheduled': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'no-show': return 'bg-orange-100 text-orange-800';
+      case 'PROGRAMME': return 'bg-blue-100 text-blue-800';
+      case 'TERMINE': return 'bg-green-100 text-green-800';
+      case 'ANNULE': return 'bg-red-100 text-red-800';
+      case 'ABSENT': return 'bg-orange-100 text-orange-800';
+      case 'CONFIRME': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'scheduled': return 'Programmé';
-      case 'completed': return 'Terminé';
-      case 'cancelled': return 'Annulé';
-      case 'no-show': return 'Absent';
+      case 'PROGRAMME': return 'Programmé';
+      case 'TERMINE': return 'Terminé';
+      case 'ANNULE': return 'Annulé';
+      case 'ABSENT': return 'Absent';
+      case 'CONFIRME': return 'Confirmé';
       default: return status;
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'scheduled': return <Clock className="h-4 w-4" />;
-      case 'completed': return <CheckCircle className="h-4 w-4" />;
-      case 'cancelled': return <XCircle className="h-4 w-4" />;
-      case 'no-show': return <AlertCircle className="h-4 w-4" />;
+      case 'PROGRAMME': return <Clock className="h-4 w-4" />;
+      case 'TERMINE': return <CheckCircle className="h-4 w-4" />;
+      case 'ANNULE': return <XCircle className="h-4 w-4" />;
+      case 'ABSENT': return <AlertCircle className="h-4 w-4" />;
+      case 'CONFIRME': return <CheckCircle className="h-4 w-4" />;
       default: return <Clock className="h-4 w-4" />;
     }
   };
 
   const filteredAppointments = appointments
     .filter(apt => {
-      if (filterStatus !== 'all' && apt.status !== filterStatus) return false;
+      if (filterStatus !== 'all' && apt.statut !== filterStatus) return false;
       if (searchQuery) {
         const patient = patients.find(p => p.id === apt.patientId);
         const searchLower = searchQuery.toLowerCase();
         return patient && (
-          patient.firstName.toLowerCase().includes(searchLower) ||
-          patient.lastName.toLowerCase().includes(searchLower) ||
-          apt.reason.toLowerCase().includes(searchLower)
+          patient.prenom.toLowerCase().includes(searchLower) ||
+          patient.nom.toLowerCase().includes(searchLower) ||
+          apt.motif.toLowerCase().includes(searchLower)
         );
       }
       return true;
     })
     .sort((a, b) => {
-      const dateA = new Date(`${a.appointmentDate}T${a.appointmentTime}`);
-      const dateB = new Date(`${b.appointmentDate}T${b.appointmentTime}`);
+      const dateA = new Date(a.dateHeure);
+      const dateB = new Date(b.dateHeure);
       return dateB.getTime() - dateA.getTime();
     });
 
-  const todayAppointments = appointments.filter(apt => 
-    apt.appointmentDate === new Date().toISOString().split('T')[0] && 
-    apt.status === 'scheduled'
-  );
+  const todayAppointments = appointments.filter(apt => {
+    const aptDate = new Date(apt.dateHeure).toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
+    return aptDate === today && apt.statut === 'PROGRAMME';
+  });
 
   const handleSubmit = () => {
-    if (!newAppointment.patientId || !newAppointment.doctorId || !newAppointment.appointmentTime || !newAppointment.reason) {
+    if (!newAppointment.patientId || !newAppointment.medecinId || !newAppointment.dateHeure || !newAppointment.motif) {
       alert('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
+    const appointmentData = {
+      patientId: newAppointment.patientId,
+      medecinId: newAppointment.medecinId,
+      dateHeure: newAppointment.dateHeure,
+      motif: newAppointment.motif,
+      notes: newAppointment.notes || null,
+      duree: newAppointment.duree,
+      statut: 'PROGRAMME' as const
+    };
+
     if (editingAppointment) {
-      updateAppointment(editingAppointment, {
-        ...newAppointment,
-        status: 'scheduled'
-      });
+      // updateAppointment(editingAppointment, appointmentData);
       setEditingAppointment(null);
     } else {
-      addAppointment({
-        ...newAppointment,
-        status: 'scheduled'
-      });
+      addAppointment(appointmentData);
     }
 
     setIsAddingAppointment(false);
     setNewAppointment({
       patientId: '',
-      doctorId: '',
-      appointmentDate: selectedDate,
-      appointmentTime: '',
-      reason: '',
-      notes: ''
+      medecinId: '',
+      dateHeure: '',
+      motif: '',
+      notes: '',
+      duree: 30
     });
   };
 
   const handleEdit = (appointment: any) => {
+    const dateTime = new Date(appointment.dateHeure);
+    const date = dateTime.toISOString().split('T')[0];
+    const time = dateTime.toTimeString().slice(0, 5);
+    
     setNewAppointment({
-      patientId: appointment.patientId,
-      doctorId: appointment.doctorId,
-      appointmentDate: appointment.appointmentDate,
-      appointmentTime: appointment.appointmentTime,
-      reason: appointment.reason,
-      notes: appointment.notes || ''
+      patientId: appointment.patientId.toString(),
+      medecinId: appointment.medecinId.toString(),
+      dateHeure: `${date}T${time}`,
+      motif: appointment.motif,
+      notes: appointment.notes || '',
+      duree: appointment.duree
     });
     setEditingAppointment(appointment.id);
     setIsAddingAppointment(true);
   };
 
-  const doctors = users.filter(u => u.role === 'doctor');
+  const doctors = users.filter(u => u.role === 'Medecin_Chef');
 
   return (
     <div className="space-y-6">
@@ -166,7 +177,7 @@ export const AppointmentManagement: React.FC = () => {
               <p className="text-sm font-medium text-gray-600">Cette semaine</p>
               <p className="text-2xl font-bold text-green-600">
                 {appointments.filter(apt => {
-                  const aptDate = new Date(apt.appointmentDate);
+                  const aptDate = new Date(apt.dateHeure);
                   const today = new Date();
                   const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
                   const weekEnd = new Date(today.setDate(today.getDate() - today.getDay() + 6));
@@ -183,7 +194,7 @@ export const AppointmentManagement: React.FC = () => {
             <div>
               <p className="text-sm font-medium text-gray-600">En attente</p>
               <p className="text-2xl font-bold text-orange-600">
-                {appointments.filter(apt => apt.status === 'scheduled').length}
+                {appointments.filter(apt => apt.statut === 'PROGRAMME').length}
               </p>
             </div>
             <Clock className="h-8 w-8 text-orange-500" />
@@ -237,9 +248,11 @@ export const AppointmentManagement: React.FC = () => {
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="all">Tous les statuts</option>
-            <option value="scheduled">Programmés</option>
-            <option value="completed">Terminés</option>
-            <option value="cancelled">Annulés</option>
+            <option value="PROGRAMME">Programmés</option>
+            <option value="TERMINE">Terminés</option>
+            <option value="ANNULE">Annulés</option>
+            <option value="ABSENT">Absents</option>
+            <option value="CONFIRME">Confirmés</option>
           </select>
 
           <input
@@ -271,7 +284,7 @@ export const AppointmentManagement: React.FC = () => {
                 <option value="">Sélectionner un patient</option>
                 {patients.map(patient => (
                   <option key={patient.id} value={patient.id}>
-                    {patient.firstName} {patient.lastName} - {patient.patientNumber}
+                    {patient.prenom} {patient.nom}
                   </option>
                 ))}
               </select>
@@ -282,14 +295,14 @@ export const AppointmentManagement: React.FC = () => {
                 Médecin *
               </label>
               <select
-                value={newAppointment.doctorId}
-                onChange={(e) => setNewAppointment({ ...newAppointment, doctorId: e.target.value })}
+                value={newAppointment.medecinId}
+                onChange={(e) => setNewAppointment({ ...newAppointment, medecinId: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">Sélectionner un médecin</option>
                 {doctors.map(doctor => (
                   <option key={doctor.id} value={doctor.id}>
-                    Dr. {doctor.firstName} {doctor.lastName}
+                    Dr. {doctor.prenom} {doctor.nom}
                   </option>
                 ))}
               </select>
@@ -297,26 +310,31 @@ export const AppointmentManagement: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Date *
+                Date et heure *
               </label>
               <input
-                type="date"
-                value={newAppointment.appointmentDate}
-                onChange={(e) => setNewAppointment({ ...newAppointment, appointmentDate: e.target.value })}
+                type="datetime-local"
+                value={newAppointment.dateHeure}
+                onChange={(e) => setNewAppointment({ ...newAppointment, dateHeure: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Heure *
+                Durée (minutes) *
               </label>
-              <input
-                type="time"
-                value={newAppointment.appointmentTime}
-                onChange={(e) => setNewAppointment({ ...newAppointment, appointmentTime: e.target.value })}
+              <select
+                value={newAppointment.duree}
+                onChange={(e) => setNewAppointment({ ...newAppointment, duree: parseInt(e.target.value) })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+              >
+                <option value={15}>15 minutes</option>
+                <option value={30}>30 minutes</option>
+                <option value={45}>45 minutes</option>
+                <option value={60}>60 minutes</option>
+                <option value={90}>90 minutes</option>
+              </select>
             </div>
 
             <div className="md:col-span-2">
@@ -325,8 +343,8 @@ export const AppointmentManagement: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={newAppointment.reason}
-                onChange={(e) => setNewAppointment({ ...newAppointment, reason: e.target.value })}
+                value={newAppointment.motif}
+                onChange={(e) => setNewAppointment({ ...newAppointment, motif: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Ex: Contrôle, Consultation, Urgence..."
               />
@@ -353,11 +371,11 @@ export const AppointmentManagement: React.FC = () => {
                 setEditingAppointment(null);
                 setNewAppointment({
                   patientId: '',
-                  doctorId: '',
-                  appointmentDate: selectedDate,
-                  appointmentTime: '',
-                  reason: '',
-                  notes: ''
+                  medecinId: '',
+                  dateHeure: '',
+                  motif: '',
+                  notes: '',
+                  duree: 30
                 });
               }}
               className="px-6 py-3 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
@@ -397,7 +415,10 @@ export const AppointmentManagement: React.FC = () => {
           <div className="divide-y divide-gray-100">
             {filteredAppointments.map((appointment) => {
               const patient = patients.find(p => p.id === appointment.patientId);
-              const doctor = users.find(u => u.id === appointment.doctorId);
+              const doctor = users.find(u => u.id === appointment.medecinId);
+              const dateTime = new Date(appointment.dateHeure);
+              const date = dateTime.toLocaleDateString('fr-FR');
+              const time = dateTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
               
               return (
                 <div key={appointment.id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
@@ -410,32 +431,32 @@ export const AppointmentManagement: React.FC = () => {
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            {patient ? `${patient.firstName} ${patient.lastName}` : 'Patient inconnu'}
+                            {patient ? `${patient.prenom} ${patient.nom}` : 'Patient inconnu'}
                           </h3>
-                          <span className={`inline-flex items-center space-x-1 px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(appointment.status)}`}>
-                            {getStatusIcon(appointment.status)}
-                            <span>{getStatusLabel(appointment.status)}</span>
+                          <span className={`inline-flex items-center space-x-1 px-3 py-1 text-sm font-medium rounded-full ${getStatusColor(appointment.statut)}`}>
+                            {getStatusIcon(appointment.statut)}
+                            <span>{getStatusLabel(appointment.statut)}</span>
                           </span>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                           <div className="flex items-center space-x-1">
                             <Calendar className="h-4 w-4" />
-                            <span>{new Date(appointment.appointmentDate).toLocaleDateString('fr-FR')}</span>
+                            <span>{date}</span>
                           </div>
                           
                           <div className="flex items-center space-x-1">
                             <Clock className="h-4 w-4" />
-                            <span>{appointment.appointmentTime}</span>
+                            <span>{time} ({appointment.duree} min)</span>
                           </div>
                           
                           <div className="flex items-center space-x-1">
                             <User className="h-4 w-4" />
-                            <span>Dr. {doctor ? `${doctor.firstName} ${doctor.lastName}` : 'Médecin inconnu'}</span>
+                            <span>Dr. {doctor ? `${doctor.prenom} ${doctor.nom}` : 'Médecin inconnu'}</span>
                           </div>
                         </div>
                         
-                        <p className="text-sm text-gray-800 mt-2 font-medium">{appointment.reason}</p>
+                        <p className="text-sm text-gray-800 mt-2 font-medium">{appointment.motif}</p>
                         {appointment.notes && (
                           <p className="text-sm text-gray-600 mt-1">{appointment.notes}</p>
                         )}
@@ -443,10 +464,10 @@ export const AppointmentManagement: React.FC = () => {
                     </div>
                     
                     <div className="flex items-center space-x-2">
-                      {appointment.status === 'scheduled' && (
+                      {appointment.statut === 'PROGRAMME' && (
                         <>
                           <button
-                            onClick={() => updateAppointment(appointment.id, { status: 'completed' })}
+                            onClick={() => updateAppointment(String(appointment.id), { statut: 'TERMINE' })}
                             className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
                             title="Marquer comme terminé"
                           >
@@ -462,7 +483,7 @@ export const AppointmentManagement: React.FC = () => {
                           </button>
                           
                           <button
-                            onClick={() => updateAppointment(appointment.id, { status: 'cancelled' })}
+                            onClick={() => updateAppointment(String(appointment.id), { statut: 'ANNULE' })}
                             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
                             title="Annuler"
                           >
@@ -474,7 +495,7 @@ export const AppointmentManagement: React.FC = () => {
                       <button
                         onClick={() => {
                           if (confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) {
-                            deleteAppointment(appointment.id);
+                            deleteAppointment(String(appointment.id));
                           }
                         }}
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"

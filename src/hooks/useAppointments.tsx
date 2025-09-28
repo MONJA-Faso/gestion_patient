@@ -1,18 +1,29 @@
 import { useState, useEffect } from 'react';
 import { Appointment } from '../types';
-import { mockAppointments } from '../data/mockData';
+import { fetchAllApointement } from '../api/ApiCenter';
 
 export const useAppointments = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulation du chargement des données
+
+    loadAppointement();
     setTimeout(() => {
-      setAppointments(mockAppointments);
       setLoading(false);
     }, 500);
   }, []);
+
+  const loadAppointement = async () => {
+    try {
+      const appointments = await fetchAllApointement();
+      setAppointments(appointments)
+    } catch (error: any) {
+      console.error("Erreur lors du chargement des patients:", error.message);
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const addAppointment = (appointmentData: Omit<Appointment, 'id'>) => {
     const newAppointment: Appointment = {
@@ -23,8 +34,13 @@ export const useAppointments = () => {
     return newAppointment;
   };
 
+  const getAllAppointment = async () => {
+    const allAppointment = await fetchAllApointement();
+    return allAppointment;
+  }
+
   const updateAppointment = (id: string, updates: Partial<Appointment>) => {
-    setAppointments(prev => prev.map(a => 
+    setAppointments(prev => prev.map(a =>
       a.id === id ? { ...a, ...updates } : a
     ));
   };
@@ -42,11 +58,11 @@ export const useAppointments = () => {
   };
 
   const getAppointmentsByDoctorId = (doctorId: string) => {
-    return appointments.filter(a => a.doctorId === doctorId);
+    return appointments.filter(a => a.medecinId === doctorId);
   };
 
   const getAppointmentsByDate = (date: string) => {
-    return appointments.filter(a => a.appointmentDate === date);
+    return appointments.filter(a => a.dateHeure === date);
   };
 
   return {
@@ -55,6 +71,7 @@ export const useAppointments = () => {
     addAppointment,
     updateAppointment,
     deleteAppointment,
+    getAllAppointment,
     getAppointmentById,
     getAppointmentsByPatientId,
     getAppointmentsByDoctorId,

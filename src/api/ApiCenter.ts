@@ -5,6 +5,7 @@ import {
     RegisterUserResponse,
     LoginResponse,
     Patient,
+    Appointment,
 } from "../types";
 
 // Types
@@ -144,7 +145,7 @@ export const createPatient = async (
 };
 
 export const updateSignlePatient = async (id: string, updates: Partial<Patient>): Promise<Patient> => {
-    const { data } = await api.put<Patient>(`/patients/${id}`,updates, {
+    const { data } = await api.put<Patient>(`/patients/${id}`, updates, {
         headers: authHeader()
     });
     return data;
@@ -170,3 +171,12 @@ export const deleteSinglePatient = async (id: string): Promise<string> => {
     });
     return data;
 };
+
+// rendez-vous
+
+export const fetchAllApointement = async () : Promise<Appointment[]> => {
+    const { data } = await api.get(`/rendezvous`, {
+        headers: authHeader()
+    });
+    return data;
+}
