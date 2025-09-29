@@ -41,7 +41,7 @@ const authHeader = () => ({
 export const getDashboardInfo = async (): Promise<any[]> => {
     try {
         const { data } = await api.get('/dashboard', {
-            headers: authHeader() 
+            headers: authHeader()
         });
         return data;
     } catch (error: any) {
@@ -192,3 +192,18 @@ export const fetchAllApointement = async (): Promise<Appointment[]> => {
     });
     return data;
 }
+
+export const addNewAppointment = async (newAppointment: Partial<Appointment>): Promise<Appointment> => {
+
+    const { data } = await api.post(`/rendezvous/create`, newAppointment, {
+        headers: authHeader()
+    });
+    return data;
+}
+
+export const deleteSingleAppointment = async (id: string): Promise<string> => {
+    const { data } = await api.delete(`/rendezvous/${id}`, {
+        headers: authHeader()
+    });
+    return data;
+};

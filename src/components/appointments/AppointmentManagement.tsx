@@ -22,7 +22,7 @@ export const AppointmentManagement: React.FC = () => {
   const { users } = useUsers();
   // const { user: currentUser } = useAuth();
   
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const [isAddingAppointment, setIsAddingAppointment] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<string | number | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'PROGRAMME' | 'TERMINE' | 'ANNULE' | 'ABSENT'>('all');
@@ -34,7 +34,7 @@ export const AppointmentManagement: React.FC = () => {
     dateHeure: '',
     motif: '',
     notes: '',
-    duree: 30 // Durée par défaut de 30 minutes
+    duree: 30
   });
 
   if (loading) {
@@ -80,7 +80,16 @@ export const AppointmentManagement: React.FC = () => {
 
   const filteredAppointments = appointments
     .filter(apt => {
+      // Filtre par statut
       if (filterStatus !== 'all' && apt.statut !== filterStatus) return false;
+      
+      // Filtre par date sélectionnée
+      if (selectedDate) {
+        const aptDate = new Date(apt.dateHeure).toISOString().split('T')[0];
+        if (aptDate !== selectedDate) return false;
+      }
+      
+      // Filtre par recherche
       if (searchQuery) {
         const patient = patients.find(p => p.id === apt.patientId);
         const searchLower = searchQuery.toLowerCase();
@@ -90,6 +99,7 @@ export const AppointmentManagement: React.FC = () => {
           apt.motif.toLowerCase().includes(searchLower)
         );
       }
+      
       return true;
     })
     .sort((a, b) => {
@@ -111,9 +121,9 @@ export const AppointmentManagement: React.FC = () => {
     }
 
     const appointmentData = {
-      patientId: newAppointment.patientId,
-      medecinId: newAppointment.medecinId,
-      dateHeure: newAppointment.dateHeure,
+      patientId: parseInt(String(newAppointment.patientId), 10),
+      medecinId: parseInt(String(newAppointment.medecinId), 10),
+      dateHeure: new Date(newAppointment.dateHeure),
       motif: newAppointment.motif,
       notes: newAppointment.notes || null,
       duree: newAppointment.duree,
@@ -124,6 +134,7 @@ export const AppointmentManagement: React.FC = () => {
       // updateAppointment(editingAppointment, appointmentData);
       setEditingAppointment(null);
     } else {
+      // console.log("donnéee de RDV : ",appointmentData);
       addAppointment(appointmentData);
     }
 
@@ -399,7 +410,7 @@ export const AppointmentManagement: React.FC = () => {
             <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun rendez-vous trouvé</h3>
             <p className="text-gray-600 mb-6">
-              {searchQuery || filterStatus !== 'all' 
+              {searchQuery || filterStatus !== 'all' || selectedDate
                 ? 'Aucun rendez-vous ne correspond à vos critères.' 
                 : 'Commencez par programmer votre premier rendez-vous.'}
             </p>
@@ -493,7 +504,8 @@ export const AppointmentManagement: React.FC = () => {
                       )}
                       
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) {
                             deleteAppointment(String(appointment.id));
                           }

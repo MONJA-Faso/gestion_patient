@@ -104,7 +104,7 @@ export interface Appointment {
   id: string | number;
   patientId: string | number;
   medecinId: string | number;
-  dateHeure: string;
+  dateHeure: Date;
   motif: string;
   statut: 'PROGRAMME' | 'CONFIRME' | 'TERMINE' | 'ANNULE' | 'ABSENT';
   notes?: string | null;
