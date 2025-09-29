@@ -201,6 +201,13 @@ export const addNewAppointment = async (newAppointment: Partial<Appointment>): P
     return data;
 }
 
+export const updateSingleAppointment = async (id: string, updates: Partial<Appointment>): Promise<Appointment> => {
+    const { data } = await api.put<Appointment>(`/rendezvous/${id}`, updates, {
+        headers: authHeader()
+    });
+    return data;
+}
+
 export const deleteSingleAppointment = async (id: string): Promise<string> => {
     const { data } = await api.delete(`/rendezvous/${id}`, {
         headers: authHeader()

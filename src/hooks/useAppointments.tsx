@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Appointment } from '../types';
-import { addNewAppointment, deleteSingleAppointment, fetchAllApointement } from '../api/ApiCenter';
+import { addNewAppointment, deleteSingleAppointment, fetchAllApointement, updateSingleAppointment } from '../api/ApiCenter';
 
 export const useAppointments = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -26,12 +26,8 @@ export const useAppointments = () => {
   }
 
   const addAppointment = async (appointmentData: Omit<Appointment, 'id'>) => {
-
-    // console.log("NV RDV : ", appointmentData);
     const newAppointment = addNewAppointment(appointmentData);
-
     setAppointments(await getAllAppointment());
-
     return newAppointment;
   };
 
@@ -41,9 +37,16 @@ export const useAppointments = () => {
   }
 
   const updateAppointment = (id: string, updates: Partial<Appointment>) => {
-    setAppointments(prev => prev.map(a =>
-      a.id === id ? { ...a, ...updates } : a
-    ));
+    try {
+      updateSingleAppointment(id, updates)
+      setLoading(true)
+      setTimeout(async () => {
+        setAppointments(await getAllAppointment());
+        setLoading(false)
+      }, 500)
+    } catch (error: any) {
+      console.error("Erreur lors de la modification du Rendez-vous !", error);
+    }
   };
 
   const deleteAppointment = (id: string) => {
@@ -57,10 +60,6 @@ export const useAppointments = () => {
         setLoading(false)
       }, 500)
     } catch (error: any) {
-      if (error.response) {
-        throw new Error(error.response?.data.Response);
-
-      }
       console.error("Erreur lors de la suppression du Rendez-vous !", error);
     }
 

@@ -131,7 +131,7 @@ export const AppointmentManagement: React.FC = () => {
     };
 
     if (editingAppointment) {
-      // updateAppointment(editingAppointment, appointmentData);
+      updateAppointment(String(editingAppointment), appointmentData);
       setEditingAppointment(null);
     } else {
       // console.log("donnéee de RDV : ",appointmentData);
