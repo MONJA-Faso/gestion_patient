@@ -27,7 +27,11 @@ export const useAppointments = () => {
 
   const addAppointment = async (appointmentData: Omit<Appointment, 'id'>) => {
     const newAppointment = addNewAppointment(appointmentData);
-    setAppointments(await getAllAppointment());
+    setLoading(true)
+    setTimeout(async () => {
+      setAppointments(await getAllAppointment());
+      setLoading(false)
+    }, 500)
     return newAppointment;
   };
 

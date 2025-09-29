@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
@@ -11,6 +11,7 @@ import { AppointmentManagement } from './components/appointments/AppointmentMana
 import { UserManagement } from './components/users/UserManagement';
 import { ReportsManagement } from './components/reports/ReportsManagement';
 import { Settings } from './components/settings/Settings';
+import { Appointment } from './types';
 // import { getDashboardInfo } from './api/ApiCenter';
 // import Swal from 'sweetalert2';
 
@@ -20,6 +21,7 @@ const AppContent: React.FC = () => {
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
   const [showAddPatient, setShowAddPatient] = useState(false);
+  const [patientAppointment, setPatientAppointment] = useState<any | null>(null)
 
   const [isRegister, setIsRegister] = useState(false);
 
@@ -94,6 +96,15 @@ const AppContent: React.FC = () => {
     setCurrentPage('patients');
   };
 
+  const handleCreateAppointWithPatient = (appoint?: Partial<Appointment>) => {
+    setPatientAppointment(appoint)
+    setCurrentPage("appointments")
+  }
+
+  const handleAppointmentPatientUsed = () => {
+    setPatientAppointment(null);
+  }
+
   const renderPageContent = () => {
     if (currentPage === 'patient-detail' && selectedPatientId) {
       return (
@@ -120,10 +131,11 @@ const AppContent: React.FC = () => {
           <PatientList
             onPatientSelect={handlePatientSelect}
             onAddPatient={handleAddPatient}
+            patientAppoint={handleCreateAppointWithPatient}
           />
         );
       case 'appointments':
-        return <AppointmentManagement />;
+        return <AppointmentManagement patientAppointment={patientAppointment} freePatientID={handleAppointmentPatientUsed} />;
       case 'medical-records':
         return (
           <div className="bg-white rounded-xl shadow-lg p-8 text-center">

@@ -1,33 +1,40 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAppointments } from '../../hooks/useAppointments';
 import { usePatients } from '../../hooks/usePatients';
 import { useUsers } from '../../hooks/useUsers';
 // import { useAuth } from '../../hooks/useAuth';
-import { 
-  Calendar, 
-  Plus, 
-  Clock, 
-  User, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Calendar,
+  Plus,
+  Clock,
+  User,
+  CheckCircle,
+  XCircle,
   AlertCircle,
   Edit,
   Trash2,
-  Search
+  Search,
+  Undo
 } from 'lucide-react';
+import { Appointment } from '../../types';
 
-export const AppointmentManagement: React.FC = () => {
+interface AppointmentProps {
+  patientAppointment: Partial<Appointment> | null
+  freePatientID: () => void;
+}
+
+export const AppointmentManagement: React.FC<AppointmentProps> = ({ patientAppointment, freePatientID }) => {
   const { appointments, addAppointment, updateAppointment, deleteAppointment, loading } = useAppointments();
   const { patients } = usePatients();
   const { users } = useUsers();
   // const { user: currentUser } = useAuth();
-  
+
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [isAddingAppointment, setIsAddingAppointment] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<string | number | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'PROGRAMME' | 'TERMINE' | 'ANNULE' | 'ABSENT'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const [newAppointment, setNewAppointment] = useState({
     patientId: '',
     medecinId: '',
@@ -36,14 +43,6 @@ export const AppointmentManagement: React.FC = () => {
     notes: '',
     duree: 30
   });
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -82,13 +81,13 @@ export const AppointmentManagement: React.FC = () => {
     .filter(apt => {
       // Filtre par statut
       if (filterStatus !== 'all' && apt.statut !== filterStatus) return false;
-      
+
       // Filtre par date sélectionnée
       if (selectedDate) {
         const aptDate = new Date(apt.dateHeure).toISOString().split('T')[0];
         if (aptDate !== selectedDate) return false;
       }
-      
+
       // Filtre par recherche
       if (searchQuery) {
         const patient = patients.find(p => p.id === apt.patientId);
@@ -99,7 +98,7 @@ export const AppointmentManagement: React.FC = () => {
           apt.motif.toLowerCase().includes(searchLower)
         );
       }
-      
+
       return true;
     })
     .sort((a, b) => {
@@ -134,11 +133,11 @@ export const AppointmentManagement: React.FC = () => {
       updateAppointment(String(editingAppointment), appointmentData);
       setEditingAppointment(null);
     } else {
-      // console.log("donnéee de RDV : ",appointmentData);
       addAppointment(appointmentData);
     }
 
     setIsAddingAppointment(false);
+    freePatientID();
     setNewAppointment({
       patientId: '',
       medecinId: '',
@@ -153,7 +152,7 @@ export const AppointmentManagement: React.FC = () => {
     const dateTime = new Date(appointment.dateHeure);
     const date = dateTime.toISOString().split('T')[0];
     const time = dateTime.toTimeString().slice(0, 5);
-    
+
     setNewAppointment({
       patientId: appointment.patientId.toString(),
       medecinId: appointment.medecinId.toString(),
@@ -166,7 +165,37 @@ export const AppointmentManagement: React.FC = () => {
     setIsAddingAppointment(true);
   };
 
+  const handleAdAppointFromPatient = (patient: Partial<Appointment>) => {
+    if (patientAppointment && patientAppointment.patientId) {
+      setNewAppointment({
+        patientId: patient.patientId ? String(patient.patientId) : '',
+        medecinId: '',
+        dateHeure: '',
+        motif: '',
+        notes: '',
+        duree: 30
+      });
+      setIsAddingAppointment(true);
+    }
+  }
+
   const doctors = users.filter(u => u.role === 'Medecin_Chef');
+
+  useEffect(() => {
+    if (patientAppointment && patientAppointment.patientId) {
+      console.log("ID du Patient : ", patientAppointment.patientId);
+      handleAdAppointFromPatient(patientAppointment);
+      freePatientID();
+    }
+  }, [patientAppointment])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -230,7 +259,7 @@ export const AppointmentManagement: React.FC = () => {
             <h2 className="text-2xl font-bold text-gray-900">Gestion des Rendez-vous</h2>
             <p className="text-gray-600">{filteredAppointments.length} rendez-vous trouvé{filteredAppointments.length > 1 ? 's' : ''}</p>
           </div>
-          
+
           <button
             onClick={() => setIsAddingAppointment(true)}
             className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
@@ -252,7 +281,7 @@ export const AppointmentManagement: React.FC = () => {
               className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-          
+
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as any)}
@@ -411,7 +440,7 @@ export const AppointmentManagement: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucun rendez-vous trouvé</h3>
             <p className="text-gray-600 mb-6">
               {searchQuery || filterStatus !== 'all' || selectedDate
-                ? 'Aucun rendez-vous ne correspond à vos critères.' 
+                ? 'Aucun rendez-vous ne correspond à vos critères.'
                 : 'Commencez par programmer votre premier rendez-vous.'}
             </p>
             <button
@@ -430,7 +459,7 @@ export const AppointmentManagement: React.FC = () => {
               const dateTime = new Date(appointment.dateHeure);
               const date = dateTime.toLocaleDateString('fr-FR');
               const time = dateTime.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-              
+
               return (
                 <div key={appointment.id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
                   <div className="flex items-center justify-between">
@@ -438,7 +467,7 @@ export const AppointmentManagement: React.FC = () => {
                       <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
                         <Calendar className="h-6 w-6 text-white" />
                       </div>
-                      
+
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900">
@@ -449,33 +478,44 @@ export const AppointmentManagement: React.FC = () => {
                             <span>{getStatusLabel(appointment.statut)}</span>
                           </span>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                           <div className="flex items-center space-x-1">
                             <Calendar className="h-4 w-4" />
                             <span>{date}</span>
                           </div>
-                          
+
                           <div className="flex items-center space-x-1">
                             <Clock className="h-4 w-4" />
                             <span>{time} ({appointment.duree} min)</span>
                           </div>
-                          
+
                           <div className="flex items-center space-x-1">
                             <User className="h-4 w-4" />
                             <span>Dr. {doctor ? `${doctor.prenom} ${doctor.nom}` : 'Médecin inconnu'}</span>
                           </div>
                         </div>
-                        
+
                         <p className="text-sm text-gray-800 mt-2 font-medium">{appointment.motif}</p>
                         {appointment.notes && (
                           <p className="text-sm text-gray-600 mt-1">{appointment.notes}</p>
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
-                      {appointment.statut === 'PROGRAMME' && (
+                      {appointment.statut === 'TERMINE' && (
+                        <>
+                          <button
+                            onClick={() => updateAppointment(String(appointment.id), { statut: 'PROGRAMME' })}
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                            title="Modifier"
+                          >
+                            <Undo className="h-5 w-5" />
+                          </button>
+                        </>
+                      )}
+                      {appointment.statut !== 'TERMINE' && (
                         <>
                           <button
                             onClick={() => updateAppointment(String(appointment.id), { statut: 'TERMINE' })}
@@ -484,7 +524,7 @@ export const AppointmentManagement: React.FC = () => {
                           >
                             <CheckCircle className="h-5 w-5" />
                           </button>
-                          
+
                           <button
                             onClick={() => handleEdit(appointment)}
                             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
@@ -492,7 +532,7 @@ export const AppointmentManagement: React.FC = () => {
                           >
                             <Edit className="h-5 w-5" />
                           </button>
-                          
+
                           <button
                             onClick={() => updateAppointment(String(appointment.id), { statut: 'ANNULE' })}
                             className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
@@ -502,7 +542,7 @@ export const AppointmentManagement: React.FC = () => {
                           </button>
                         </>
                       )}
-                      
+
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

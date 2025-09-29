@@ -14,10 +14,11 @@ import Swal from 'sweetalert2';
 
 interface PatientListProps {
   onPatientSelect: (patientId: string) => void;
-  onAddPatient: (patient?:any) => void;
+  onAddPatient: (patient?: any) => void;
+  patientAppoint: (appoint?: any) => void;
 }
 
-export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAddPatient }) => {
+export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAddPatient, patientAppoint }) => {
   const { patients, loading, searchPatients, deletePatient } = usePatients();
   const [searchQuery, setSearchQuery] = useState('');
   const [filtersexe, setFiltersexe] = useState<'all' | 'Masculin' | 'Féminin'>('all');
@@ -224,7 +225,7 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          // TODO: Implémenter les rendez-vous
+                          patientAppoint({ patientId: patient.id })
                         }}
                         className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-200"
                         title="Rendez-vous"
