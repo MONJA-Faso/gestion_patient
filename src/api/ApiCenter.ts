@@ -37,6 +37,18 @@ const authHeader = () => ({
     Authorization: `Bearer ${getToken()}`
 });
 
+// Dashboard APIs
+export const getDashboardInfo = async (): Promise<any[]> => {
+    try {
+        const { data } = await api.get('/dashboard', {
+            headers: authHeader() 
+        });
+        return data;
+    } catch (error: any) {
+        throw error.response ? error : new Error('Erreur de connexion');
+    }
+}
+
 // User APIs
 export const registerUser = async (userData: RegisterUserData): Promise<RegisterUserResponse> => {
     const parsedData: ParsedRegisterUserData = {
@@ -172,9 +184,9 @@ export const deleteSinglePatient = async (id: string): Promise<string> => {
     return data;
 };
 
-// rendez-vous
+// rendez-vous APIs
 
-export const fetchAllApointement = async () : Promise<Appointment[]> => {
+export const fetchAllApointement = async (): Promise<Appointment[]> => {
     const { data } = await api.get(`/rendezvous`, {
         headers: authHeader()
     });

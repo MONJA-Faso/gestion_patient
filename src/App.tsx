@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { LoginForm } from './components/auth/LoginForm';
 import { RegisterForm } from './components/auth/RegisterForm';
@@ -11,6 +11,8 @@ import { AppointmentManagement } from './components/appointments/AppointmentMana
 import { UserManagement } from './components/users/UserManagement';
 import { ReportsManagement } from './components/reports/ReportsManagement';
 import { Settings } from './components/settings/Settings';
+// import { getDashboardInfo } from './api/ApiCenter';
+// import Swal from 'sweetalert2';
 
 const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -20,6 +22,37 @@ const AppContent: React.FC = () => {
   const [showAddPatient, setShowAddPatient] = useState(false);
 
   const [isRegister, setIsRegister] = useState(false);
+
+
+  // const verifyToken = async () => {
+  //   try {
+  //     getDashboardInfo()
+  //   } catch (error: any) {
+  //     if (error.response) {
+  //       await Swal.fire({
+  //         icon: 'error',
+  //         title: 'Erreur',
+  //         text: error.response?.data.error,
+  //         confirmButtonText: 'OK',
+  //         confirmButtonColor: '#d33'
+  //       });
+  //       return;
+  //     }else {
+  //       Swal.fire({
+  //         icon: 'error',
+  //         title: 'Erreur',
+  //         text: "Token expiré; Veuillew vous reconnecter !",
+  //         confirmButtonText: 'OK',
+  //         confirmButtonColor: '#d33'
+  //       });
+  //     }
+  //   }
+  // }
+
+  // useEffect(() => {
+  //   console.log("Info dashboard : ", getDashboardInfo());
+  //   verifyToken();
+  // }, [])
 
   if (isLoading) {
     return (
