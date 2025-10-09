@@ -30,8 +30,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
     getMedicalRecordsByPatientId,
     getPregnancyRecordsByPatientId,
     getMenstrualRecordsByPatientId,
-    getChronicConditionsByPatientId,
-    addMedicalRecord
+    getChronicConditionsByPatientId
   } = usePatients();
   const { user } = useAuth();
 
@@ -97,24 +96,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
       return;
     }
 
-    const record = {
-      patientId: patient.id,
-      consultationDate: new Date().toISOString(),
-      consultationReason: newRecord.consultationReason,
-      diagnosis: newRecord.diagnosis,
-      treatment: newRecord.treatment,
-      dosage: newRecord.dosage,
-      notes: newRecord.notes,
-      doctorId: user!.id,
-      InfirmiereId: user!.role === 'Infirmiere' ? user!.id : undefined,
-      vitals: {
-        temperature: newRecord.vitals.temperature ? parseFloat(newRecord.vitals.temperature) : undefined,
-        bloodPressure: newRecord.vitals.bloodPressure || undefined,
-        heartRate: newRecord.vitals.heartRate ? parseInt(newRecord.vitals.heartRate) : undefined,
-        weight: newRecord.vitals.weight ? parseFloat(newRecord.vitals.weight) : undefined,
-        height: newRecord.vitals.height ? parseFloat(newRecord.vitals.height) : undefined,
-      }
-    };
 
     // addMedicalRecord(record);
     setIsAddingRecord(false);

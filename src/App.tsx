@@ -13,6 +13,7 @@ import { ReportsManagement } from './components/reports/ReportsManagement';
 import { Settings } from './components/settings/Settings';
 import { Appointment } from './types';
 import { GardeManagement } from './components/gardes/Gardes';
+import MedRecords from './components/medicalRecords/MedRecords';
 // import { getDashboardInfo } from './api/ApiCenter';
 // import Swal from 'sweetalert2';
 
@@ -138,12 +139,7 @@ const AppContent: React.FC = () => {
       case 'appointments':
         return <AppointmentManagement patientAppointment={patientAppointment} freePatientID={handleAppointmentPatientUsed} />;
       case 'medical-records':
-        return (
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Dossiers Médicaux</h2>
-            <p className="text-gray-600">Vue générale des dossiers médicaux accessible via les détails des patients.</p>
-          </div>
-        );
+        return <MedRecords/>
       case 'reports':
         return <ReportsManagement />;
       case 'gardes':

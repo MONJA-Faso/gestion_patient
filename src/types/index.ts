@@ -171,3 +171,30 @@ export interface UpdateGardeData {
   medecinId?: number;
   typeGarde?: TypeGardeEnum;
 }
+
+export interface DossierMedical {
+  id: string;
+  patientId: string;
+  dateCreation: string;
+  creePar?: string;
+  patient?: {
+    nom: string;
+    prenom: string;
+    dateNaissance: string;
+    sexe: string;
+  };
+  utilisateurCreateur?: {
+    nom: string;
+    prenom: string;
+  };
+}
+
+export interface CreateDossierMedicalData {
+  patientId: number;
+  creePar?: string;
+}
+
+export interface UpdateDossierMedicalData {
+  patientId?: number;
+  creePar?: string;
+}

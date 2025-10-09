@@ -9,6 +9,9 @@ import {
     Garde,
     UpdateGardeData,
     CreateGardeData,
+    DossierMedical,
+    CreateDossierMedicalData,
+    UpdateDossierMedicalData,
 } from "../types";
 
 // Types
@@ -242,6 +245,42 @@ export const updateGarde = async (id: string, updates: UpdateGardeData): Promise
 
 export const deleteGarde = async (id: string): Promise<string> => {
     const { data } = await api.delete(`/gardes/${id}`, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+// DossierMedical APIs
+export const createDossierMedical = async (dossierData: CreateDossierMedicalData): Promise<DossierMedical> => {
+    const { data } = await api.post<DossierMedical>('/dossierMedical/create', dossierData, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const getAllDossierMedicals = async (): Promise<DossierMedical[]> => {
+    const { data } = await api.get<DossierMedical[]>('/dossierMedical/', {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const getDossierMedicalById = async (id: string): Promise<DossierMedical> => {
+    const { data } = await api.get<DossierMedical>(`/dossierMedical/${id}`, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const updateDossierMedical = async (id: string, updates: UpdateDossierMedicalData): Promise<DossierMedical> => {
+    const { data } = await api.put<DossierMedical>(`/dossierMedical/${id}`, updates, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const deleteDossierMedical = async (id: string): Promise<string> => {
+    const { data } = await api.delete(`/dossierMedical/${id}`, {
         headers: authHeader()
     });
     return data;
