@@ -6,6 +6,9 @@ import {
     LoginResponse,
     Patient,
     Appointment,
+    Garde,
+    UpdateGardeData,
+    CreateGardeData,
 } from "../types";
 
 // Types
@@ -210,6 +213,35 @@ export const updateSingleAppointment = async (id: string, updates: Partial<Appoi
 
 export const deleteSingleAppointment = async (id: string): Promise<string> => {
     const { data } = await api.delete(`/rendezvous/${id}`, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+// Garde APIs
+export const createGarde = async (gardeData: CreateGardeData): Promise<Garde> => {
+    const { data } = await api.post<Garde>('/gardes/create', gardeData, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const getGardes = async (year: number, month: number): Promise<Garde[]> => {
+    const { data } = await api.get<Garde[]>(`/gardes?year=${year}&month=${month}`, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const updateGarde = async (id: string, updates: UpdateGardeData): Promise<Garde> => {
+    const { data } = await api.put<Garde>(`/gardes/${id}`, updates, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const deleteGarde = async (id: string): Promise<string> => {
+    const { data } = await api.delete(`/gardes/${id}`, {
         headers: authHeader()
     });
     return data;

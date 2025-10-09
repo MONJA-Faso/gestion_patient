@@ -12,6 +12,7 @@ import { UserManagement } from './components/users/UserManagement';
 import { ReportsManagement } from './components/reports/ReportsManagement';
 import { Settings } from './components/settings/Settings';
 import { Appointment } from './types';
+import { GardeManagement } from './components/gardes/Gardes';
 // import { getDashboardInfo } from './api/ApiCenter';
 // import Swal from 'sweetalert2';
 
@@ -145,6 +146,8 @@ const AppContent: React.FC = () => {
         );
       case 'reports':
         return <ReportsManagement />;
+      case 'gardes':
+        return <GardeManagement />
       case 'users':
         return <UserManagement />;
       case 'settings':

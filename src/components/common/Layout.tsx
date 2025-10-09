@@ -12,6 +12,7 @@ import {
   Heart,
   Menu,
   X,
+  Shield,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -31,7 +32,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
     ];
 
     if (user?.role === 'Secretaire') {
-      return [...baseItems, { id: 'appointments', label: 'Rendez-vous', icon: Calendar }];
+      return [...baseItems,
+      { id: 'appointments', label: 'Rendez-vous', icon: Calendar },
+      { id: 'gardes', label: 'Gardes', icon: Shield },
+      ];
     }
 
     if (user?.role === 'Infirmiere') {
@@ -49,6 +53,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
         { id: 'medical-records', label: 'Dossiers Médicaux', icon: FileText },
         { id: 'reports', label: 'Rapports', icon: BarChart3 },
         { id: 'users', label: 'Utilisateurs', icon: User },
+        { id: 'gardes', label: 'Gardes', icon: Shield },
         { id: 'settings', label: 'Paramètres', icon: Settings },
       ];
     }
@@ -112,11 +117,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
                   onNavigate(item.id);
                   setSidebarOpen(false);
                 }}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                  isActive
-                    ? 'bg-blue-50 text-green-600 border-r-4 border-green-500'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${isActive
+                  ? 'bg-blue-50 text-green-600 border-r-4 border-green-500'
+                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
               >
                 <Icon className={`h-5 w-5 ${isActive ? 'text-green-500' : 'text-gray-400'}`} />
                 <span className="font-medium">{item.label}</span>

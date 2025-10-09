@@ -137,3 +137,37 @@ export interface Report {
   generatedAt: string;
   generatedBy: string;
 }
+export enum TypeGardeEnum {
+  JOUR = 'JOUR',
+  NUIT = 'NUIT',
+  WEEK_END = 'WEEK_END'
+}
+
+export interface Garde {
+  id: number;
+  dateDebut: Date;
+  dateFin: Date;
+  medecinId: number;
+  typeGarde: TypeGardeEnum;
+  medecin?: {
+    id: number;
+    nom: string;
+    prenom: string;
+  };
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface CreateGardeData {
+  dateDebut: Date;
+  dateFin: Date;
+  medecinId: number;
+  typeGarde: TypeGardeEnum;
+}
+
+export interface UpdateGardeData {
+  dateDebut?: Date;
+  dateFin?: Date;
+  medecinId?: number;
+  typeGarde?: TypeGardeEnum;
+}
