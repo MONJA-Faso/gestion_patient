@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { usePatients } from '../../hooks/usePatients';
 import { useAuth } from '../../hooks/useAuth';
 import {
   ArrowLeft,
   User,
-  Phone,
-  Mail,
   MapPin,
   Calendar,
   FileText,

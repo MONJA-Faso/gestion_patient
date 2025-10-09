@@ -1,5 +1,5 @@
 // components/MedRecords.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useMedRecords } from '../../hooks/useMedRecords';
 import { usePatients } from '../../hooks/usePatients';
 import { useAuth } from '../../hooks/useAuth';
