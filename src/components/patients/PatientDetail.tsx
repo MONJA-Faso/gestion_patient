@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { usePatients } from '../../hooks/usePatients';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -19,10 +19,11 @@ import {
 
 interface PatientDetailProps {
   patientId: string;
+  currentTab: string;
   onBack: () => void;
 }
 
-export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack }) => {
+export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack, currentTab }) => {
   const {
     getPatientById,
     getMedicalRecordsByPatientId,
@@ -49,8 +50,12 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
     }
   });
 
-  console.log("Patient ID :" , patientId);
-  
+  console.log("Patient ID :", patientId);
+
+
+  useEffect(() => {
+    setActiveTab(currentTab);
+  }, [currentTab])
 
   const patient = getPatientById(patientId);
   const medicalRecords = getMedicalRecordsByPatientId(patientId);
@@ -94,7 +99,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
       return;
     }
 
-
     // addMedicalRecord(record);
     setIsAddingRecord(false);
     setNewRecord({
@@ -122,7 +126,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
   ];
 
   const canAccessMedical = user?.role !== 'Secretaire';
-
 
   return (
     <div className="space-y-6">

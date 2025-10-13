@@ -18,7 +18,11 @@ import {
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
-const MedRecords: React.FC = () => {
+interface MedRecordProps {
+    onPatientSelect: (patientId: string) => void;
+}
+
+const MedRecords: React.FC<MedRecordProps> = ({onPatientSelect}) => {
     const { dossiers, loading, error, addDossier, updateDossier, removeDossier } = useMedRecords();
     const { patients, loading: patientsLoading } = usePatients();
     const { user: currentUser } = useAuth();
@@ -334,7 +338,10 @@ const MedRecords: React.FC = () => {
                             </div>
 
                             <div className="mt-4 pt-4 border-t border-gray-100">
-                                <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm font-medium">
+                                <button
+                                    onClick={ () => onPatientSelect(dossier.patientId.toString()) }
+                                    className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                                >
                                     <Eye className="h-4 w-4" />
                                     <span>Voir les consultations</span>
                                 </button>

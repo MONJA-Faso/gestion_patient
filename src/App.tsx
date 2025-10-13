@@ -24,6 +24,7 @@ const AppContent: React.FC = () => {
   const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
   const [showAddPatient, setShowAddPatient] = useState(false);
   const [patientAppointment, setPatientAppointment] = useState<any | null>(null)
+  const [detailOnglet, setDetailOnglet] = useState('overview');
 
   const [isRegister, setIsRegister] = useState(false);
 
@@ -79,6 +80,13 @@ const AppContent: React.FC = () => {
 
   const handlePatientSelect = (patientId: string) => {
     setSelectedPatientId(patientId);
+    setDetailOnglet('overview');
+    setCurrentPage('patient-detail');
+  };
+
+  const handlePatientMedSelect = (patientId: string) => {
+    setSelectedPatientId(patientId);
+    setDetailOnglet('medical');
     setCurrentPage('patient-detail');
   };
 
@@ -113,6 +121,7 @@ const AppContent: React.FC = () => {
         <PatientDetail
           patientId={selectedPatientId}
           onBack={handleBackToPatients}
+          currentTab={detailOnglet}
         />
       );
     }
@@ -139,7 +148,7 @@ const AppContent: React.FC = () => {
       case 'appointments':
         return <AppointmentManagement patientAppointment={patientAppointment} freePatientID={handleAppointmentPatientUsed} />;
       case 'medical-records':
-        return <MedRecords/>
+        return <MedRecords onPatientSelect={handlePatientMedSelect} />
       case 'reports':
         return <ReportsManagement />;
       case 'gardes':

@@ -15,8 +15,6 @@ export const usePatients = () => {
     const loadPatients = async () => {
       try {
         const patientsData = await getAllPatients();
-        console.log("Patients chargés depuis l'API:", patientsData);
-
         setPatients(patientsData);
         setMedicalRecords(mockMedicalRecords);
         setPregnancyRecords(mockPregnancyRecords);
