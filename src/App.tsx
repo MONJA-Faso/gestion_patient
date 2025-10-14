@@ -25,6 +25,7 @@ const AppContent: React.FC = () => {
   const [showAddPatient, setShowAddPatient] = useState(false);
   const [patientAppointment, setPatientAppointment] = useState<any | null>(null)
   const [detailOnglet, setDetailOnglet] = useState('overview');
+  // Test Dossier
 
   const [isRegister, setIsRegister] = useState(false);
 

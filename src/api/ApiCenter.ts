@@ -12,6 +12,12 @@ import {
     DossierMedical,
     CreateDossierMedicalData,
     UpdateDossierMedicalData,
+    FichierConsultation,
+    CreateFichierConsultationData,
+    CreateSuiviMedicalData,
+    SuiviMedical,
+    UpdateFichierConsultationData,
+    UpdateSuiviMedicalData,
 } from "../types";
 
 // Types
@@ -281,6 +287,78 @@ export const updateDossierMedical = async (id: string, updates: UpdateDossierMed
 
 export const deleteDossierMedical = async (id: string): Promise<string> => {
     const { data } = await api.delete(`/dossierMedical/${id}`, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+// FichierConsultation APIs
+export const createFichierConsultation = async (consultationData: CreateFichierConsultationData): Promise<FichierConsultation> => {
+    const { data } = await api.post<FichierConsultation>('/fichierConsultation/create', consultationData, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const getAllFichiersConsultation = async (): Promise<FichierConsultation[]> => {
+    const { data } = await api.get<FichierConsultation[]>('/fichierConsultation/', {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const getFichierConsultationById = async (id: string): Promise<FichierConsultation> => {
+    const { data } = await api.get<FichierConsultation>(`/fichierConsultation/${id}`, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const updateFichierConsultation = async (id: string, updates: UpdateFichierConsultationData): Promise<FichierConsultation> => {
+    const { data } = await api.put<FichierConsultation>(`/fichierConsultation/${id}`, updates, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const deleteFichierConsultation = async (id: string): Promise<string> => {
+    const { data } = await api.delete(`/fichierConsultation/${id}`, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const getConsultationsByDossierId = async (dossierId: string): Promise<FichierConsultation[]> => {
+    const { data } = await api.get<FichierConsultation[]>(`/fichierConsultation/dossier/${dossierId}`, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+// SuiviMedical APIs
+export const createSuiviMedical = async (suiviData: CreateSuiviMedicalData): Promise<SuiviMedical> => {
+    const { data } = await api.post<SuiviMedical>('/suiviMedical/create', suiviData, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const getSuivisByConsultationId = async (consultationId: string): Promise<SuiviMedical[]> => {
+    const { data } = await api.get<SuiviMedical[]>(`/suiviMedical/consultation/${consultationId}`, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const updateSuiviMedical = async (id: string, updates: UpdateSuiviMedicalData): Promise<SuiviMedical> => {
+    const { data } = await api.put<SuiviMedical>(`/suiviMedical/${id}`, updates, {
+        headers: authHeader()
+    });
+    return data;
+};
+
+export const deleteSuiviMedical = async (id: string): Promise<string> => {
+    const { data } = await api.delete(`/suiviMedical/${id}`, {
         headers: authHeader()
     });
     return data;

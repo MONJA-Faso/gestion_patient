@@ -198,3 +198,65 @@ export interface UpdateDossierMedicalData {
   patientId?: number;
   creePar?: string;
 }
+
+export interface FichierConsultation {
+  id: number;
+  dossierId: number;
+  motifConsultation: string;
+  diagnostic?: string;
+  prescriptions?: string;
+  observations?: string;
+  typeConsultation: 'Nouvelle' | 'Suivi';
+  dateConsultation: string;
+  creePar?: number;
+  utilisateurCreateur?: {
+    nom: string;
+    prenom: string;
+  };
+  dossierMedical?: {
+    patient?: {
+      nom: string;
+      prenom: string;
+    };
+  };
+  suivisMedicaux?: SuiviMedical[];
+}
+
+export interface CreateFichierConsultationData {
+  dossierId: number;
+  motifConsultation: string;
+  diagnostic?: string;
+  prescriptions?: string;
+  observations?: string;
+  typeConsultation: 'Nouvelle' | 'Suivi';
+  creePar?: number;
+}
+
+export interface UpdateFichierConsultationData {
+  motifConsultation?: string;
+  diagnostic?: string;
+  prescriptions?: string;
+  observations?: string;
+  typeConsultation?: 'Nouvelle' | 'Suivi';
+}
+
+export interface SuiviMedical {
+  id: number;
+  fichierConsultationId: number;
+  typeSuivi: 'Grossesse' | 'Cycle' | 'Pathologie_Chronique';
+  details?: string;
+  dateSuivi: string;
+}
+
+export interface CreateSuiviMedicalData {
+  fichierConsultationId: number;
+  typeSuivi: 'Grossesse' | 'Cycle' | 'Pathologie_Chronique';
+  details?: string;
+  dateSuivi: string;
+}
+
+export interface UpdateSuiviMedicalData {
+  typeSuivi?: 'Grossesse' | 'Cycle' | 'Pathologie_Chronique';
+  details?: string;
+  dateSuivi?: string;
+}
