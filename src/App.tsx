@@ -27,7 +27,7 @@ const AppContent: React.FC = () => {
   const [patientAppointment, setPatientAppointment] = useState<any | null>(null)
   const [detailOnglet, setDetailOnglet] = useState('overview');
 
-  const { consultations } = useConsultations();
+  const { consultations, fetchConsultations } = useConsultations();
   const [isRegister, setIsRegister] = useState(false);
 
 
@@ -132,6 +132,7 @@ const AppContent: React.FC = () => {
           onBack={handleBackToPatients}
           currentTab={detailOnglet}
           consultations={consultations}
+          onConsultationsUpdate={fetchConsultations}
         />
       );
     }
