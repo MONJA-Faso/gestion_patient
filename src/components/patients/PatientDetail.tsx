@@ -62,7 +62,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
     ));
   };
 
-  // Fonctions pour extraire les suivis par type
   const getPregnancyFollowUps = useMemo(() => {
     const patientConsultations = fetchConsultationsByDossier(patientId);
     const pregnancyFollowUps: any[] = [];
@@ -186,7 +185,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
 
   const tabs = [
     { id: 'overview', label: 'Vue d\'ensemble', icon: User },
-    { id: 'medical', label: 'Dossier Médical', icon: FileText },
+    { id: 'medical', label: 'Consultations', icon: FileText },
     { id: 'pregnancy', label: 'Suivi Grossesse', icon: Baby },
     { id: 'menstrual', label: 'Cycle Menstruel', icon: Heart },
     { id: 'chronic', label: 'Pathologies', icon: Activity }
@@ -295,30 +294,24 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
                       <p className="text-gray-900">{patient.prenom} {patient.nom}</p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Date de naissance</label>
-                      <p className="text-gray-900">{new Date(patient.dateNaissance).toLocaleDateString('fr-FR')}</p>
-                    </div>
-                    <div>
                       <label className="text-sm font-medium text-gray-700">Genre</label>
                       <p className="text-gray-900">{patient.sexe === 'Masculin' ? 'Homme' : 'Femme'}</p>
+                    </div>
+
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 opacity-0">Informations Personnelles</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Date de naissance</label>
+                      <p className="text-gray-900">{new Date(patient.dateNaissance).toLocaleDateString('fr-FR')}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-700">Adresse</label>
                       <p className="text-gray-900">{patient.adresse}</p>
                     </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact</h3>
-                  <div className="space-y-3">
-
-                  </div>
-
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 mt-6">Contact d'urgence</h3>
-                  <div className="space-y-3">
-                            //! TEst Affichage
-                    LEEEEEEE
                   </div>
                 </div>
               </div>

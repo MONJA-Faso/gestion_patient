@@ -14,7 +14,6 @@ import {
     updateFichierConsultation,
     deleteFichierConsultation,
     createSuiviMedical,
-    getSuivisByConsultationId,
     updateSuiviMedical,
     deleteSuiviMedical
 } from '../api/ApiCenter';
@@ -71,16 +70,6 @@ export const useConsultations = () => {
         }
     };
 
-    // Charger les suivis par consultation
-    const fetchSuivisByConsultation = async (consultationId: string) => {
-        try {
-            setError(null);
-            const data = await getSuivisByConsultationId(consultationId);
-            setSuivis(data);
-        } catch (err: any) {
-            setError(err.response?.data?.error || 'Erreur lors du chargement des suivis');
-        }
-    };
 
     // CRUD pour les consultations
     const addConsultation = async (consultationData: CreateFichierConsultationData): Promise<FichierConsultation> => {
@@ -185,7 +174,6 @@ export const useConsultations = () => {
         fetchConsultationsByDossier,
         getConsultationsByDossierId, // Exporte aussi la fonction de filtrage
         fetchConsultationById,
-        fetchSuivisByConsultation,
         addConsultation,
         updateConsultation,
         removeConsultation,

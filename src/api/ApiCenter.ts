@@ -328,13 +328,6 @@ export const deleteFichierConsultation = async (id: string): Promise<string> => 
     return data;
 };
 
-export const getConsultationsByDossierId = async (dossierId: string): Promise<FichierConsultation[]> => {
-    const { data } = await api.get<FichierConsultation[]>(`/fichierConsultation/dossier/${dossierId}`, {
-        headers: authHeader()
-    });
-    return data;
-};
-
 // SuiviMedical APIs
 export const createSuiviMedical = async (suiviData: CreateSuiviMedicalData): Promise<SuiviMedical> => {
     const { data } = await api.post<SuiviMedical>('/suiviMedical/create', suiviData, {
@@ -343,12 +336,6 @@ export const createSuiviMedical = async (suiviData: CreateSuiviMedicalData): Pro
     return data;
 };
 
-export const getSuivisByConsultationId = async (consultationId: string): Promise<SuiviMedical[]> => {
-    const { data } = await api.get<SuiviMedical[]>(`/suiviMedical/consultation/${consultationId}`, {
-        headers: authHeader()
-    });
-    return data;
-};
 
 export const updateSuiviMedical = async (id: string, updates: UpdateSuiviMedicalData): Promise<SuiviMedical> => {
     const { data } = await api.put<SuiviMedical>(`/suiviMedical/${id}`, updates, {
