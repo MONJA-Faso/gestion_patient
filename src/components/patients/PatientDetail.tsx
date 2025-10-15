@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { usePatients } from '../../hooks/usePatients';
 import { useAuth } from '../../hooks/useAuth';
 import {
@@ -16,20 +16,18 @@ import {
   Save,
   X
 } from 'lucide-react';
+import { FichierConsultation } from '../../types';
 
 interface PatientDetailProps {
   patientId: string;
   currentTab: string;
   onBack: () => void;
+  consultations: FichierConsultation[];
 }
 
-export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack, currentTab }) => {
+export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack, currentTab, consultations }) => {
   const {
-    getPatientById,
-    getMedicalRecordsByPatientId,
-    getPregnancyRecordsByPatientId,
-    getMenstrualRecordsByPatientId,
-    getChronicConditionsByPatientId
+    getPatientById
   } = usePatients();
   const { user } = useAuth();
 
@@ -52,16 +50,86 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
 
   console.log("Patient ID :", patientId);
 
-
   useEffect(() => {
     setActiveTab(currentTab);
-  }, [currentTab])
+    console.log("*** *** Dossiers in PatientDetail:", consultations);
+    console.log("+++ +++ :", fetchConsultationsByDossier(patientId));
+  }, [currentTab]);
+
+  const fetchConsultationsByDossier = (patientId: string): FichierConsultation[] => {
+    return consultations.filter(consultation => (
+      consultation.dossierMedical?.patientId === parseInt(patientId, 10)
+    ));
+  };
+
+  // Fonctions pour extraire les suivis par type
+  const getPregnancyFollowUps = useMemo(() => {
+    const patientConsultations = fetchConsultationsByDossier(patientId);
+    const pregnancyFollowUps: any[] = [];
+
+    patientConsultations.forEach(consultation => {
+      consultation.suivisMedicaux?.forEach(suivi => {
+        if (suivi.typeSuivi === 'Grossesse') {
+          pregnancyFollowUps.push({
+            ...suivi,
+            consultation: {
+              date: consultation.dateConsultation,
+              motif: consultation.motifConsultation,
+              medecin: consultation.utilisateurCreateur
+            }
+          });
+        }
+      });
+    });
+
+    return pregnancyFollowUps.sort((a, b) => new Date(b.dateSuivi).getTime() - new Date(a.dateSuivi).getTime());
+  }, [patientId, consultations]);
+
+  const getMenstrualFollowUps = useMemo(() => {
+    const patientConsultations = fetchConsultationsByDossier(patientId);
+    const menstrualFollowUps: any[] = [];
+
+    patientConsultations.forEach(consultation => {
+      consultation.suivisMedicaux?.forEach(suivi => {
+        if (suivi.typeSuivi === 'Cycle') {
+          menstrualFollowUps.push({
+            ...suivi,
+            consultation: {
+              date: consultation.dateConsultation,
+              motif: consultation.motifConsultation,
+              medecin: consultation.utilisateurCreateur
+            }
+          });
+        }
+      });
+    });
+
+    return menstrualFollowUps.sort((a, b) => new Date(b.dateSuivi).getTime() - new Date(a.dateSuivi).getTime());
+  }, [patientId, consultations]);
+
+  const getChronicConditionFollowUps = useMemo(() => {
+    const patientConsultations = fetchConsultationsByDossier(patientId);
+    const chronicFollowUps: any[] = [];
+
+    patientConsultations.forEach(consultation => {
+      consultation.suivisMedicaux?.forEach(suivi => {
+        if (suivi.typeSuivi === 'Pathologie_Chronique') {
+          chronicFollowUps.push({
+            ...suivi,
+            consultation: {
+              date: consultation.dateConsultation,
+              motif: consultation.motifConsultation,
+              medecin: consultation.utilisateurCreateur
+            }
+          });
+        }
+      });
+    });
+
+    return chronicFollowUps.sort((a, b) => new Date(b.dateSuivi).getTime() - new Date(a.dateSuivi).getTime());
+  }, [patientId, consultations]);
 
   const patient = getPatientById(patientId);
-  const medicalRecords = getMedicalRecordsByPatientId(patientId);
-  const pregnancyRecords = getPregnancyRecordsByPatientId(patientId);
-  const menstrualRecords = getMenstrualRecordsByPatientId(patientId);
-  const chronicConditions = getChronicConditionsByPatientId(patientId);
 
   if (!patient) {
     return (
@@ -99,7 +167,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
       return;
     }
 
-    // addMedicalRecord(record);
     setIsAddingRecord(false);
     setNewRecord({
       consultationReason: '',
@@ -129,7 +196,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
 
   return (
     <div className="space-y-6">
-      {/* En-tête */}
+      {/* En-tête et navigation restent identiques */}
       <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
         <div className="flex items-center justify-between mb-6">
           <button
@@ -187,7 +254,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
         </div>
       </div>
 
-      {/* Navigation par onglets */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-100">
         <div className="border-b border-gray-200 overflow-x-auto">
           <nav className="flex px-4 md:px-6 space-x-4 sm:space-x-6 lg:space-x-8 overflow-x-auto no-scrollbar">
@@ -215,8 +281,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
             })}
           </nav>
         </div>
-
-
 
         {/* Contenu des onglets */}
         <div className="p-6">
@@ -253,7 +317,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
 
                   <h3 className="text-lg font-semibold text-gray-900 mb-4 mt-6">Contact d'urgence</h3>
                   <div className="space-y-3">
-                    //! TEst Affichage
+                            //! TEst Affichage
                     LEEEEEEE
                   </div>
                 </div>
@@ -264,7 +328,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
           {activeTab === 'medical' && canAccessMedical && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Historique Médical</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Historique des Consultations</h3>
                 <button
                   onClick={() => setIsAddingRecord(true)}
                   className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
@@ -340,93 +404,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
                     </div>
                   </div>
 
-                  {/* Constantes vitales */}
-                  <div className="mb-4">
-                    <h5 className="text-sm font-medium text-gray-700 mb-2">Constantes vitales</h5>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Température (°C)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={newRecord.vitals.temperature}
-                          onChange={(e) => setNewRecord({
-                            ...newRecord,
-                            vitals: { ...newRecord.vitals, temperature: e.target.value }
-                          })}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                          placeholder="36.5"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Tension</label>
-                        <input
-                          type="text"
-                          value={newRecord.vitals.bloodPressure}
-                          onChange={(e) => setNewRecord({
-                            ...newRecord,
-                            vitals: { ...newRecord.vitals, bloodPressure: e.target.value }
-                          })}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                          placeholder="120/80"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Pouls (bpm)</label>
-                        <input
-                          type="number"
-                          value={newRecord.vitals.heartRate}
-                          onChange={(e) => setNewRecord({
-                            ...newRecord,
-                            vitals: { ...newRecord.vitals, heartRate: e.target.value }
-                          })}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                          placeholder="70"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Poids (kg)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={newRecord.vitals.weight}
-                          onChange={(e) => setNewRecord({
-                            ...newRecord,
-                            vitals: { ...newRecord.vitals, weight: e.target.value }
-                          })}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                          placeholder="70.0"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Taille (cm)</label>
-                        <input
-                          type="number"
-                          value={newRecord.vitals.height}
-                          onChange={(e) => setNewRecord({
-                            ...newRecord,
-                            vitals: { ...newRecord.vitals, height: e.target.value }
-                          })}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                          placeholder="170"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Notes complémentaires
-                    </label>
-                    <textarea
-                      value={newRecord.notes}
-                      onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      rows={3}
-                      placeholder="Observations, recommandations..."
-                    />
-                  </div>
-
                   <div className="flex justify-end space-x-3">
                     <button
                       onClick={() => setIsAddingRecord(false)}
@@ -446,28 +423,31 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
               )}
 
               <div className="space-y-4">
-                {medicalRecords.length === 0 ? (
+                {fetchConsultationsByDossier(patientId).length === 0 ? (
                   <div className="text-center py-8">
                     <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Aucun dossier médical</h4>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Aucune consultation</h4>
                     <p className="text-gray-600">Ce patient n'a pas encore de consultation enregistrée.</p>
                   </div>
                 ) : (
-                  medicalRecords
-                    .sort((a, b) => new Date(b.consultationDate).getTime() - new Date(a.consultationDate).getTime())
-                    .map((record) => (
-                      <div key={record.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                  fetchConsultationsByDossier(patientId)
+                    .sort((a: FichierConsultation, b: FichierConsultation) => new Date(b.dateConsultation).getTime() - new Date(a.dateConsultation).getTime())
+                    .map((consultation: FichierConsultation) => (
+                      <div key={consultation.id} className="bg-white border border-gray-200 rounded-lg p-6">
                         <div className="flex items-start justify-between mb-4">
                           <div>
-                            <h4 className="font-semibold text-gray-900">{record.consultationReason}</h4>
+                            <h4 className="font-semibold text-gray-900">{consultation.motifConsultation}</h4>
                             <p className="text-sm text-gray-600">
-                              {new Date(record.consultationDate).toLocaleDateString('fr-FR', {
+                              {new Date(consultation.dateConsultation).toLocaleDateString('fr-FR', {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit'
-                              })}
+                              })} - {consultation.typeConsultation}
+                            </p>
+                            <p className="text-sm text-gray-500 mt-1">
+                              Par Dr. {consultation.utilisateurCreateur.prenom} {consultation.utilisateurCreateur.nom}
                             </p>
                           </div>
                         </div>
@@ -475,61 +455,42 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <div>
                             <label className="text-sm font-medium text-gray-700">Diagnostic</label>
-                            <p className="text-gray-900">{record.diagnosis}</p>
+                            <p className="text-gray-900">
+                              {consultation.diagnostic || 'Aucun diagnostic spécifié'}
+                            </p>
                           </div>
-                          {record.treatment && (
+
+                          {consultation.prescriptions && (
                             <div>
-                              <label className="text-sm font-medium text-gray-700">Traitement</label>
-                              <p className="text-gray-900">{record.treatment}</p>
-                              {record.dosage && (
-                                <p className="text-sm text-gray-600">{record.dosage}</p>
-                              )}
+                              <label className="text-sm font-medium text-gray-700">Prescriptions</label>
+                              <p className="text-gray-900">{consultation.prescriptions}</p>
                             </div>
                           )}
                         </div>
 
-                        {record.vitals && (
+                        {consultation.observations && (
                           <div className="mb-4">
-                            <label className="text-sm font-medium text-gray-700 mb-2 block">Constantes vitales</label>
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-                              {record.vitals.temperature && (
-                                <div>
-                                  <span className="text-gray-600">Température:</span>
-                                  <span className="ml-1 font-medium">{record.vitals.temperature}°C</span>
-                                </div>
-                              )}
-                              {record.vitals.bloodPressure && (
-                                <div>
-                                  <span className="text-gray-600">Tension:</span>
-                                  <span className="ml-1 font-medium">{record.vitals.bloodPressure}</span>
-                                </div>
-                              )}
-                              {record.vitals.heartRate && (
-                                <div>
-                                  <span className="text-gray-600">Pouls:</span>
-                                  <span className="ml-1 font-medium">{record.vitals.heartRate} bpm</span>
-                                </div>
-                              )}
-                              {record.vitals.weight && (
-                                <div>
-                                  <span className="text-gray-600">Poids:</span>
-                                  <span className="ml-1 font-medium">{record.vitals.weight} kg</span>
-                                </div>
-                              )}
-                              {record.vitals.height && (
-                                <div>
-                                  <span className="text-gray-600">Taille:</span>
-                                  <span className="ml-1 font-medium">{record.vitals.height} cm</span>
-                                </div>
-                              )}
-                            </div>
+                            <label className="text-sm font-medium text-gray-700">Observations</label>
+                            <p className="text-gray-900">{consultation.observations}</p>
                           </div>
                         )}
 
-                        {record.notes && (
+                        {consultation.suivisMedicaux && consultation.suivisMedicaux.length > 0 && (
                           <div>
-                            <label className="text-sm font-medium text-gray-700">Notes</label>
-                            <p className="text-gray-900">{record.notes}</p>
+                            <label className="text-sm font-medium text-gray-700 mb-2 block">Suivis médicaux</label>
+                            <div className="space-y-3">
+                              {consultation.suivisMedicaux.map((suivi) => (
+                                <div key={suivi.id} className="bg-gray-50 rounded p-3 border-l-4 border-blue-500">
+                                  <div className="flex items-center justify-between text-sm mb-1">
+                                    <span className="font-medium text-gray-900">{suivi.typeSuivi}</span>
+                                    <span className="text-gray-600">
+                                      {new Date(suivi.dateSuivi).toLocaleDateString('fr-FR')}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-600">{suivi.details}</p>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -543,61 +504,38 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900">Suivi de Grossesse</h3>
 
-              {pregnancyRecords.length === 0 ? (
+              {getPregnancyFollowUps.length === 0 ? (
                 <div className="text-center py-8">
                   <Baby className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">Aucun suivi de grossesse</h4>
                   <p className="text-gray-600">Aucune grossesse enregistrée pour cette patiente.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {pregnancyRecords.map((pregnancy) => (
-                    <div key={pregnancy.id} className="bg-white border border-gray-200 rounded-lg p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-semibold text-gray-900">
-                          Grossesse #{pregnancy.pregnancyNumber}
-                        </h4>
-                        <span className={`px-3 py-1 text-sm font-medium rounded-full ${pregnancy.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                          }`}>
-                          {pregnancy.status === 'active' ? 'En cours' : 'Terminée'}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Date de début</label>
-                          <p className="text-gray-900">{new Date(pregnancy.startDate).toLocaleDateString('fr-FR')}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Date prévue d'accouchement</label>
-                          <p className="text-gray-900">{new Date(pregnancy.expectedDueDate).toLocaleDateString('fr-FR')}</p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <h5 className="font-medium text-gray-900 mb-2">Visites de suivi</h5>
-                        {pregnancy.visits.length === 0 ? (
-                          <p className="text-gray-600 text-sm">Aucune visite enregistrée</p>
-                        ) : (
-                          <div className="space-y-2">
-                            {pregnancy.visits.map((visit) => (
-                              <div key={visit.id} className="bg-gray-50 rounded p-3">
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="font-medium">
-                                    Semaine {visit.gestationalWeek} - {new Date(visit.visitDate).toLocaleDateString('fr-FR')}
-                                  </span>
-                                  <span className="text-gray-600">Poids: {visit.weight}kg</span>
-                                </div>
-                                <p className="text-sm text-gray-600 mt-1">{visit.notes}</p>
-                              </div>
-                            ))}
+                <div className="space-y-6">
+                  {/* Affichage des suivis de grossesse depuis les consultations */}
+                  {getPregnancyFollowUps.length > 0 && (
+                    <div>
+                      <h4 className="text-md font-semibold text-gray-900 mb-4">Suivis de grossesse</h4>
+                      <div className="space-y-4">
+                        {getPregnancyFollowUps.map((suivi) => (
+                          <div key={suivi.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                            <div className="flex items-center justify-between mb-4">
+                              <h5 className="font-semibold text-gray-900">Suivi Grossesse</h5>
+                              <span className="text-sm text-gray-600">
+                                {new Date(suivi.dateSuivi).toLocaleDateString('fr-FR')}
+                              </span>
+                            </div>
+                            <p className="text-gray-900 mb-3">{suivi.details}</p>
+                            <div className="text-sm text-gray-600">
+                              <p>Consultation: {new Date(suivi.consultation.date).toLocaleDateString('fr-FR')}</p>
+                              <p>Motif: {suivi.consultation.motif}</p>
+                              <p>Médecin: Dr. {suivi.consultation.medecin.prenom} {suivi.consultation.medecin.nom}</p>
+                            </div>
                           </div>
-                        )}
+                        ))}
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
             </div>
@@ -607,43 +545,38 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900">Suivi du Cycle Menstruel</h3>
 
-              {menstrualRecords.length === 0 ? (
+              {getMenstrualFollowUps.length === 0 ? (
                 <div className="text-center py-8">
                   <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">Aucun suivi menstruel</h4>
                   <p className="text-gray-600">Aucun cycle menstruel enregistré pour cette patiente.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {menstrualRecords
-                    .sort((a, b) => new Date(b.cycleStartDate).getTime() - new Date(a.cycleStartDate).getTime())
-                    .map((record) => (
-                      <div key={record.id} className="bg-white border border-gray-200 rounded-lg p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">Date de début</label>
-                            <p className="text-gray-900">{new Date(record.cycleStartDate).toLocaleDateString('fr-FR')}</p>
+                <div className="space-y-6">
+                  {/* Affichage des suivis de cycle depuis les consultations */}
+                  {getMenstrualFollowUps.length > 0 && (
+                    <div>
+                      <h4 className="text-md font-semibold text-gray-900 mb-4">Suivis de cycle menstruel</h4>
+                      <div className="space-y-4">
+                        {getMenstrualFollowUps.map((suivi) => (
+                          <div key={suivi.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                            <div className="flex items-center justify-between mb-4">
+                              <h5 className="font-semibold text-gray-900">Suivi Cycle</h5>
+                              <span className="text-sm text-gray-600">
+                                {new Date(suivi.dateSuivi).toLocaleDateString('fr-FR')}
+                              </span>
+                            </div>
+                            <p className="text-gray-900 mb-3">{suivi.details}</p>
+                            <div className="text-sm text-gray-600">
+                              <p>Consultation: {new Date(suivi.consultation.date).toLocaleDateString('fr-FR')}</p>
+                              <p>Motif: {suivi.consultation.motif}</p>
+                              <p>Médecin: Dr. {suivi.consultation.medecin.prenom} {suivi.consultation.medecin.nom}</p>
+                            </div>
                           </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">Durée du cycle</label>
-                            <p className="text-gray-900">{record.cycleLength} jours</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">Régularité</label>
-                            <p className="text-gray-900">
-                              {record.cycleLength >= 21 && record.cycleLength <= 35 ? 'Normal' : 'Irrégulier'}
-                            </p>
-                          </div>
-                        </div>
-                        {record.notes && (
-                          <div className="mt-4">
-                            <label className="text-sm font-medium text-gray-700">Notes</label>
-                            <p className="text-gray-900">{record.notes}</p>
-                          </div>
-                        )}
+                        ))}
                       </div>
-                    ))
-                  }
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -653,48 +586,38 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack,
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900">Pathologies Chroniques</h3>
 
-              {chronicConditions.length === 0 ? (
+              {getChronicConditionFollowUps.length === 0 ? (
                 <div className="text-center py-8">
                   <Activity className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">Aucune pathologie chronique</h4>
                   <p className="text-gray-600">Aucune pathologie chronique enregistrée pour ce patient.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {chronicConditions.map((condition) => (
-                    <div key={condition.id} className="bg-white border border-gray-200 rounded-lg p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-semibold text-gray-900">{condition.condition}</h4>
-                        <span className={`px-3 py-1 text-sm font-medium rounded-full ${condition.status === 'active'
-                          ? 'bg-red-100 text-red-800'
-                          : condition.status === 'remission'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-green-100 text-green-800'
-                          }`}>
-                          {condition.status === 'active' ? 'Actif' :
-                            condition.status === 'remission' ? 'En rémission' : 'Guéri'}
-                        </span>
+                <div className="space-y-6">
+                  {/* Affichage des suivis de pathologies depuis les consultations */}
+                  {getChronicConditionFollowUps.length > 0 && (
+                    <div>
+                      <h4 className="text-md font-semibold text-gray-900 mb-4">Suivis des pathologies</h4>
+                      <div className="space-y-4">
+                        {getChronicConditionFollowUps.map((suivi) => (
+                          <div key={suivi.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                            <div className="flex items-center justify-between mb-4">
+                              <h5 className="font-semibold text-gray-900">Suivi Pathologie Chronique</h5>
+                              <span className="text-sm text-gray-600">
+                                {new Date(suivi.dateSuivi).toLocaleDateString('fr-FR')}
+                              </span>
+                            </div>
+                            <p className="text-gray-900 mb-3">{suivi.details}</p>
+                            <div className="text-sm text-gray-600">
+                              <p>Consultation: {new Date(suivi.consultation.date).toLocaleDateString('fr-FR')}</p>
+                              <p>Motif: {suivi.consultation.motif}</p>
+                              <p>Médecin: Dr. {suivi.consultation.medecin.prenom} {suivi.consultation.medecin.nom}</p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Date de diagnostic</label>
-                          <p className="text-gray-900">{new Date(condition.diagnosisDate).toLocaleDateString('fr-FR')}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Médicaments</label>
-                          <p className="text-gray-900">{condition.medications.join(', ')}</p>
-                        </div>
-                      </div>
-
-                      {condition.notes && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Notes</label>
-                          <p className="text-gray-900">{condition.notes}</p>
-                        </div>
-                      )}
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
             </div>

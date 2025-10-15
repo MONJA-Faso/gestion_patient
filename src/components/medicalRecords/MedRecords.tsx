@@ -293,7 +293,7 @@ const MedRecords: React.FC<MedRecordProps> = ({onPatientSelect}) => {
                                     </div>
                                     <div>
                                         <h3 className="font-semibold text-gray-900">
-                                            {patient.prenom} {patient.nom}
+                                            {dossier.id } {patient.prenom} {patient.nom}
                                         </h3>
                                         <p className="text-sm text-gray-600">ID: {dossier.patientId}</p>
                                     </div>

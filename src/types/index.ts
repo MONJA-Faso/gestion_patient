@@ -203,24 +203,31 @@ export interface FichierConsultation {
   id: number;
   dossierId: number;
   motifConsultation: string;
-  diagnostic?: string;
-  prescriptions?: string;
-  observations?: string;
-  typeConsultation: 'Nouvelle' | 'Suivi';
+  diagnostic: string | null;
+  prescriptions: string;
+  observations: string;
+  typeConsultation: string;
   dateConsultation: string;
-  creePar?: number;
-  utilisateurCreateur?: {
+  creePar: number;
+  utilisateurCreateur: {
+    id: number;
     nom: string;
     prenom: string;
+    email: string;
+    role: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
   };
-  dossierMedical?: {
-    patient?: {
-      nom: string;
-      prenom: string;
-    };
+  dossierMedical: {
+    id: number;
+    patientId: number;
+    dateCreation: string;
+    creePar: number;
   };
-  suivisMedicaux?: SuiviMedical[];
+  suivisMedicaux: SuiviMedical[];
 }
+
 
 export interface CreateFichierConsultationData {
   dossierId: number;

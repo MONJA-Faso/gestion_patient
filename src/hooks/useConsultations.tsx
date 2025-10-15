@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     FichierConsultation,
     CreateFichierConsultationData,
@@ -25,6 +25,9 @@ export const useConsultations = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    useEffect(() => {
+        fetchConsultations();
+    }, []);
     // Charger toutes les consultations
     const fetchConsultations = async () => {
         try {
@@ -41,8 +44,8 @@ export const useConsultations = () => {
 
     // Filtrer les consultations par dossier ID (côté frontend)
     const getConsultationsByDossierId = (dossierId: string) => {
-        return allConsultations.filter(consultation => 
-            consultation.dossierId === parseInt(dossierId, 10)
+        return allConsultations.filter(consultation =>
+            consultation.dossierMedical?.patientId === parseInt(dossierId, 10)
         );
     };
 
@@ -51,12 +54,12 @@ export const useConsultations = () => {
         try {
             setLoading(true);
             setError(null);
-            
+
             // Si nous n'avons pas encore chargé toutes les consultations, on les charge d'abord
             if (allConsultations.length === 0) {
                 await fetchConsultations();
             }
-            
+
             // Le filtrage se fait côté frontend via getConsultationsByDossierId
             const filteredConsultations = getConsultationsByDossierId(dossierId);
             return filteredConsultations;

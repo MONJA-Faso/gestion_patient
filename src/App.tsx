@@ -14,6 +14,7 @@ import { Settings } from './components/settings/Settings';
 import { Appointment } from './types';
 import { GardeManagement } from './components/gardes/Gardes';
 import MedRecords from './components/medicalRecords/MedRecords';
+import { useConsultations } from './hooks/useConsultations';
 // import { getDashboardInfo } from './api/ApiCenter';
 // import Swal from 'sweetalert2';
 
@@ -25,11 +26,18 @@ const AppContent: React.FC = () => {
   const [showAddPatient, setShowAddPatient] = useState(false);
   const [patientAppointment, setPatientAppointment] = useState<any | null>(null)
   const [detailOnglet, setDetailOnglet] = useState('overview');
-  // Test Dossier
 
+  const { consultations } = useConsultations();
   const [isRegister, setIsRegister] = useState(false);
 
 
+  // const fetchAlldossiers = async () => {
+  //   try {
+  //     setDossiers(await getAllDossierMedicals())
+  //   } catch (error: any) {
+  //     console.error("Erreur lors de la récupération des dossiers médicaux : ", error);
+  //   }
+  // }
   // const verifyToken = async () => {
   //   try {
   //     getDashboardInfo()
@@ -123,6 +131,7 @@ const AppContent: React.FC = () => {
           patientId={selectedPatientId}
           onBack={handleBackToPatients}
           currentTab={detailOnglet}
+          consultations={consultations}
         />
       );
     }
