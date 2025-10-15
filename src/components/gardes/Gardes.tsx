@@ -27,34 +27,35 @@ export const GardeManagement: React.FC = () => {
         return Math.ceil(diff / (7 * 24 * 60 * 60 * 1000));
     }
 
-    // Fonction pour obtenir les dates de la semaine basée sur le mois et l'année
-    function getWeekDates(year: number, month: number, week: number): Date[] {
+    // Fonction pour obtenir les dates de 14 jours (2 semaines) basée sur le mois et l'année
+    function getTwoWeeksDates(year: number, month: number, startWeek: number): Date[] {
         const firstDayOfMonth = new Date(year, month - 1, 1);
         const firstDayOfWeek = new Date(firstDayOfMonth);
         
         // Trouver le premier lundi du mois ou avant
         const dayOfWeek = firstDayOfMonth.getDay();
         const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        firstDayOfWeek.setDate(firstDayOfMonth.getDate() + daysToMonday + (week - 1) * 7);
+        firstDayOfWeek.setDate(firstDayOfMonth.getDate() + daysToMonday + (startWeek - 1) * 7);
         
-        const weekDates = [];
-        for (let i = 0; i < 7; i++) {
+        const twoWeeksDates = [];
+        for (let i = 0; i < 14; i++) {
             const date = new Date(firstDayOfWeek);
             date.setDate(firstDayOfWeek.getDate() + i);
-            weekDates.push(date);
+            twoWeeksDates.push(date);
         }
-        return weekDates;
+        return twoWeeksDates;
     }
 
-    // Fonction pour obtenir le nombre de semaines dans un mois
-    function getWeeksInMonth(year: number, month: number): number {
+    // Fonction pour obtenir le nombre de périodes de 2 semaines dans un mois
+    function getTwoWeeksPeriodsInMonth(year: number, month: number): number {
         const firstDay = new Date(year, month - 1, 1);
         const lastDay = new Date(year, month, 0);
         
         const firstWeek = getWeekNumber(firstDay);
         const lastWeek = getWeekNumber(lastDay);
+        const totalWeeks = lastWeek - firstWeek + 1;
         
-        return lastWeek - firstWeek + 1;
+        return Math.ceil(totalWeeks / 2);
     }
 
     // Fonction pour obtenir le numéro de semaine d'une date
@@ -66,16 +67,17 @@ export const GardeManagement: React.FC = () => {
         return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
     }
 
-    // Initialiser la semaine courante
+    // Initialiser la période courante
     useEffect(() => {
         const now = new Date();
         const currentWeekNumber = getWeekNumber(now);
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const firstWeekOfMonth = getWeekNumber(firstDayOfMonth);
-        setCurrentWeek(currentWeekNumber - firstWeekOfMonth + 1);
+        const weekInMonth = currentWeekNumber - firstWeekOfMonth + 1;
+        setCurrentWeek(Math.ceil(weekInMonth / 2));
     }, []);
 
-    // Mettre à jour la semaine quand le mois change
+    // Mettre à jour la période quand le mois change
     useEffect(() => {
         setCurrentWeek(1);
     }, [currentMonth, currentYear]);
@@ -88,7 +90,7 @@ export const GardeManagement: React.FC = () => {
 
     const doctors = users.filter(u => u.role === 'Medecin_Chef');
 
-    // Navigation mois/année/semaine
+    // Navigation mois/année/période
     const months = [
         'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
         'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
@@ -96,7 +98,7 @@ export const GardeManagement: React.FC = () => {
 
     const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
-    const goToPreviousWeek = () => {
+    const goToPreviousPeriod = () => {
         if (currentWeek === 1) {
             if (currentMonth === 1) {
                 changeYear(currentYear - 1);
@@ -104,15 +106,15 @@ export const GardeManagement: React.FC = () => {
             } else {
                 changeMonth(currentMonth - 1);
             }
-            setCurrentWeek(getWeeksInMonth(currentYear, currentMonth));
+            setCurrentWeek(getTwoWeeksPeriodsInMonth(currentYear, currentMonth));
         } else {
             setCurrentWeek(currentWeek - 1);
         }
     };
 
-    const goToNextWeek = () => {
-        const weeksInMonth = getWeeksInMonth(currentYear, currentMonth);
-        if (currentWeek === weeksInMonth) {
+    const goToNextPeriod = () => {
+        const periodsInMonth = getTwoWeeksPeriodsInMonth(currentYear, currentMonth);
+        if (currentWeek === periodsInMonth) {
             if (currentMonth === 12) {
                 changeYear(currentYear + 1);
                 changeMonth(1);
@@ -125,7 +127,7 @@ export const GardeManagement: React.FC = () => {
         }
     };
 
-    const goToCurrentWeek = () => {
+    const goToCurrentPeriod = () => {
         const now = new Date();
         changeYear(now.getFullYear());
         changeMonth(now.getMonth() + 1);
@@ -133,12 +135,13 @@ export const GardeManagement: React.FC = () => {
         const currentWeekNumber = getWeekNumber(now);
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const firstWeekOfMonth = getWeekNumber(firstDayOfMonth);
-        setCurrentWeek(currentWeekNumber - firstWeekOfMonth + 1);
+        const weekInMonth = currentWeekNumber - firstWeekOfMonth + 1;
+        setCurrentWeek(Math.ceil(weekInMonth / 2));
     };
 
-    // Obtenir les dates de la semaine courante
-    const weekDates = getWeekDates(currentYear, currentMonth, currentWeek);
-    const weeksInMonth = getWeeksInMonth(currentYear, currentMonth);
+    // Obtenir les dates des 14 jours courants
+    const twoWeeksDates = getTwoWeeksDates(currentYear, currentMonth, (currentWeek - 1) * 2 + 1);
+    const periodsInMonth = getTwoWeeksPeriodsInMonth(currentYear, currentMonth);
 
     // Fonction pour obtenir les gardes d'un jour spécifique
     const getGardesForDay = (date: Date): Garde[] => {
@@ -286,7 +289,7 @@ export const GardeManagement: React.FC = () => {
                     <div>
                         <h2 className="text-2xl font-bold text-gray-900">Gestion des Gardes</h2>
                         <p className="text-gray-600">
-                            {months[currentMonth - 1]} {currentYear} - Semaine {currentWeek}
+                            {months[currentMonth - 1]} {currentYear} - Période {currentWeek} (14 jours)
                         </p>
                     </div>
 
@@ -299,10 +302,10 @@ export const GardeManagement: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Navigation semaine */}
+                {/* Navigation période */}
                 <div className="mt-6 flex items-center justify-center space-x-4">
                     <button
-                        onClick={goToPreviousWeek}
+                        onClick={goToPreviousPeriod}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
                     >
                         <ChevronLeft className="h-5 w-5" />
@@ -338,15 +341,15 @@ export const GardeManagement: React.FC = () => {
                             onChange={(e) => setCurrentWeek(parseInt(e.target.value))}
                             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
-                            {Array.from({ length: weeksInMonth }, (_, i) => i + 1).map(week => (
-                                <option key={week} value={week}>
-                                    Semaine {week}
+                            {Array.from({ length: periodsInMonth }, (_, i) => i + 1).map(period => (
+                                <option key={period} value={period}>
+                                    Période {period}
                                 </option>
                             ))}
                         </select>
 
                         <button
-                            onClick={goToCurrentWeek}
+                            onClick={goToCurrentPeriod}
                             className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                         >
                             Aujourd'hui
@@ -354,7 +357,7 @@ export const GardeManagement: React.FC = () => {
                     </div>
 
                     <button
-                        onClick={goToNextWeek}
+                        onClick={goToNextPeriod}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
                     >
                         <ChevronRight className="h-5 w-5" />
@@ -454,7 +457,7 @@ export const GardeManagement: React.FC = () => {
                 </div>
             )}
 
-            {/* Calendrier hebdomadaire - TOUJOURS AFFICHÉ */}
+            {/* Calendrier sur 14 jours - TOUJOURS AFFICHÉ */}
             <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
                 <div className="grid grid-cols-7 gap-px bg-gray-200">
                     {/* En-têtes des jours */}
@@ -462,21 +465,97 @@ export const GardeManagement: React.FC = () => {
                         <div key={day} className="bg-gray-50 p-4 text-center">
                             <div className="font-semibold text-gray-900">{day}</div>
                             <div className="text-sm text-gray-600 mt-1">
-                                {formatShortDate(weekDates[index])}
+                                {formatShortDate(twoWeeksDates[index])}
                             </div>
                         </div>
                     ))}
 
-                    {/* Cellules des jours avec gardes */}
-                    {weekDates.map((date, index) => {
+                    {/* Première semaine */}
+                    {twoWeeksDates.slice(0, 7).map((date, index) => {
                         const dayGardes = getGardesForDay(date);
                         const isToday = new Date().toDateString() === date.toDateString();
                         const isInCurrentMonth = isDateInCurrentMonth(date);
                         
                         return (
                             <div
-                                key={index}
-                                className={`min-h-32 bg-white p-3 ${
+                                key={`week1-${index}`}
+                                className={`min-h-40 bg-white p-3 ${
+                                    isToday ? 'ring-2 ring-blue-500 ring-inset' : ''
+                                } ${
+                                    !isInCurrentMonth ? 'bg-gray-50 opacity-60' : ''
+                                }`}
+                            >
+                                {/* Date */}
+                                <div className={`text-sm font-medium mb-2 ${
+                                    isToday ? 'text-blue-600' : 
+                                    isInCurrentMonth ? 'text-gray-900' : 'text-gray-400'
+                                }`}>
+                                    {date.getDate()}
+                                    {!isInCurrentMonth && ` ${months[date.getMonth()].substring(0, 3)}`}
+                                </div>
+
+                                {/* Gardes */}
+                                <div className="space-y-2">
+                                    {dayGardes.map((garde) => (
+                                        <div
+                                            key={garde.id}
+                                            className={`p-2 rounded-lg border text-xs ${getTypeGardeColor(garde.typeGarde)} cursor-pointer hover:shadow-sm transition-shadow duration-200`}
+                                            onClick={() => handleEdit(garde)}
+                                        >
+                                            <div className="flex items-center space-x-1 mb-1">
+                                                {getTypeGardeIcon(garde.typeGarde)}
+                                                <span className="font-medium truncate">
+                                                    {getDoctorName(garde.medecinId)}
+                                                </span>
+                                            </div>
+                                            <div className="text-xs opacity-75">
+                                                {new Date(garde.dateDebut).toLocaleTimeString('fr-FR', {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })} - {new Date(garde.dateFin).toLocaleTimeString('fr-FR', {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Bouton d'ajout */}
+                                {isInCurrentMonth && (
+                                    <button
+                                        onClick={() => {
+                                            const newDate = new Date(date);
+                                            setNewGarde(prev => ({
+                                                ...prev,
+                                                dateDebut: new Date(newDate.setHours(8, 0, 0, 0)),
+                                                dateFin: new Date(newDate.setHours(18, 0, 0, 0))
+                                            }));
+                                            setIsAddingGarde(true);
+                                        }}
+                                        className="mt-2 w-full text-xs text-gray-400 hover:text-blue-600 hover:bg-blue-50 py-1 rounded transition-colors duration-200 flex items-center justify-center space-x-1"
+                                    >
+                                        <Plus className="h-3 w-3" />
+                                        <span>Ajouter</span>
+                                    </button>
+                                )}
+                            </div>
+                        );
+                    })}
+
+                    {/* Séparateur entre les deux semaines */}
+                    <div className="col-span-7 bg-gray-100 h-px"></div>
+
+                    {/* Deuxième semaine */}
+                    {twoWeeksDates.slice(7, 14).map((date, index) => {
+                        const dayGardes = getGardesForDay(date);
+                        const isToday = new Date().toDateString() === date.toDateString();
+                        const isInCurrentMonth = isDateInCurrentMonth(date);
+                        
+                        return (
+                            <div
+                                key={`week2-${index}`}
+                                className={`min-h-40 bg-white p-3 ${
                                     isToday ? 'ring-2 ring-blue-500 ring-inset' : ''
                                 } ${
                                     !isInCurrentMonth ? 'bg-gray-50 opacity-60' : ''
