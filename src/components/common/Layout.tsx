@@ -1,5 +1,6 @@
 import React, { ReactNode, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import logo from './../../assets/img/logo.png'
 import {
   Users,
   Calendar,
@@ -9,7 +10,6 @@ import {
   LogOut,
   Stethoscope,
   User,
-  Heart,
   Menu,
   X,
   Shield,
@@ -93,15 +93,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
       >
         {/* Logo / Haut */}
         <div className="p-6 border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-600 rounded-lg">
-              <Heart className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">FANANTENANA</h1>
-              <p className="text-sm text-gray-500">Gestion Patients</p>
-            </div>
-          </div>
+          <picture className=''>
+            <img src={logo} alt="logo" className='w-40' />
+          </picture>
         </div>
 
         {/* Navigation scrollable */}
