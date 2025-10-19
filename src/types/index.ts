@@ -38,7 +38,7 @@ export interface Patient {
   sexe: 'Masculin' | 'Féminin';
   adresse?: string;
   patientNumber?: string;
-  createdAt?: string;
+  dateCreation: string;
   updatedAt?: string;
 }
 
@@ -266,4 +266,52 @@ export interface UpdateSuiviMedicalData {
   typeSuivi?: 'Grossesse' | 'Cycle' | 'Pathologie_Chronique';
   details?: string;
   dateSuivi?: string;
+}
+
+export interface GenerateReportData {
+  type: "mensuel" | "hebdomadaire";
+  year: number;
+  month?: number;
+  week?: number;
+}
+
+export interface ReportResponse {
+  fileName: string;
+  message: string;
+}
+
+export interface DashboardData {
+  totalPatients: number;
+  totalConsultations: number;
+  newPatients: number;
+  newPatientsByDay: Array<{
+    _count: { _all: number };
+    dateCreation: string;
+  }>;
+  consultationsByDay: Array<{
+    _count: { _all: number };
+    dateConsultation: string;
+  }>;
+  recentConsultations: Array<{
+    id: number;
+    dossierId: number;
+    motifConsultation: string;
+    diagnostic: string;
+    prescriptions: string;
+    observations: string;
+    typeConsultation: string;
+    dateConsultation: string;
+    creePar: number;
+    dossierMedical: {
+      id: number;
+      patientId: number;
+      dateCreation: string;
+      creePar: number;
+      patient: {
+        nom: string;
+        prenom: string;
+      };
+    };
+  }>;
+  recentActions: any[];
 }

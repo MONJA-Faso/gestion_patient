@@ -1,43 +1,84 @@
-import { useState, useEffect } from 'react';
-import { Report } from '../types';
-import { mockReports } from '../data/mockData';
+import { useState } from 'react';
+import { generateReport, downloadReport } from './../api/ApiCenter';
+import { GenerateReportData } from '../types';
+
+interface Report {
+  id: string;
+  title: string;
+  type: 'mensuel' | 'hebdomadaire';
+  year: number;
+  month?: number;
+  week?: number;
+  fileName: string;
+  generatedAt: string;
+  data?: any;
+}
 
 export const useReports = () => {
   const [reports, setReports] = useState<Report[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Simulation du chargement des données
-    setTimeout(() => {
-      setReports(mockReports);
+  const generateNewReport = async (reportData: GenerateReportData) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await generateReport(reportData);
+
+      const newReport: Report = {
+        id: Date.now().toString(),
+        title: reportData.type === 'mensuel'
+          ? `Rapport Mensuel - ${reportData.month}/${reportData.year}`
+          : `Rapport Hebdomadaire - Semaine ${reportData.week} (${reportData.year})`,
+        type: reportData.type,
+        year: reportData.year,
+        month: reportData.month,
+        week: reportData.week,
+        fileName: result.fileName,
+        generatedAt: new Date().toISOString(),
+      };
+
+      setReports(prev => [newReport, ...prev]);
+      return newReport;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || 'Erreur lors de la génération du rapport';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
       setLoading(false);
-    }, 500);
-  }, []);
-
-  const generateReport = (reportData: Omit<Report, 'id' | 'generatedAt' | 'generatedBy'>) => {
-    const newReport: Report = {
-      ...reportData,
-      id: Date.now().toString(),
-      generatedAt: new Date().toISOString(),
-      generatedBy: '3' // ID du médecin-chef par défaut
-    };
-    setReports(prev => [newReport, ...prev]);
-    return newReport;
+    }
   };
 
-  const deleteReport = (id: string) => {
-    setReports(prev => prev.filter(r => r.id !== id));
+  const downloadReportFile = async (fileName: string) => {
+    try {
+      const blob = await downloadReport(fileName);
+
+      // Créer un URL pour le blob et déclencher le téléchargement
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || 'Erreur lors du téléchargement';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
   };
 
-  const getReportById = (id: string) => {
-    return reports.find(r => r.id === id);
-  };
+  const clearError = () => setError(null);
 
   return {
     reports,
     loading,
-    generateReport,
-    deleteReport,
-    getReportById
+    error,
+    generateReport: generateNewReport,
+    downloadReport: downloadReportFile,
+    clearError,
   };
 };

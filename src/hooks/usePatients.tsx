@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Patient, MedicalRecord, PregnancyRecord, MenstrualCycleRecord, ChronicCondition } from '../types';
-import { mockMedicalRecords, mockPregnancyRecords, mockMenstrualRecords, mockChronicConditions } from '../data/mockData';
+import { Patient, MedicalRecord } from '../types';
 import { createPatient, deleteSinglePatient, getAllPatients, updateSignlePatient } from '../api/ApiCenter';
 
 export const usePatients = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([]);
-  const [pregnancyRecords, setPregnancyRecords] = useState<PregnancyRecord[]>([]);
-  const [menstrualRecords, setMenstrualRecords] = useState<MenstrualCycleRecord[]>([]);
-  const [chronicConditions, setChronicConditions] = useState<ChronicCondition[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,10 +12,6 @@ export const usePatients = () => {
       try {
         const patientsData = await getAllPatients();
         setPatients(patientsData);
-        setMedicalRecords(mockMedicalRecords);
-        setPregnancyRecords(mockPregnancyRecords);
-        setMenstrualRecords(mockMenstrualRecords);
-        setChronicConditions(mockChronicConditions);
       } catch (error: any) {
         console.error("Erreur lors du chargement des patients:", error.message);
       } finally {
@@ -55,17 +47,6 @@ export const usePatients = () => {
     return medicalRecords.filter(r => r.patientId === patientId);
   };
 
-  const getPregnancyRecordsByPatientId = (patientId: string) => {
-    return pregnancyRecords.filter(r => r.patientId === patientId);
-  };
-
-  const getMenstrualRecordsByPatientId = (patientId: string) => {
-    return menstrualRecords.filter(r => r.patientId === patientId);
-  };
-
-  const getChronicConditionsByPatientId = (patientId: string) => {
-    return chronicConditions.filter(r => r.patientId === patientId);
-  };
 
   const searchPatients = (query: string) => {
     const lowercaseQuery = query.toLowerCase();
@@ -136,15 +117,9 @@ export const usePatients = () => {
   return {
     patients,
     medicalRecords,
-    pregnancyRecords,
-    menstrualRecords,
-    chronicConditions,
     loading,
     getPatientById,
     getMedicalRecordsByPatientId,
-    getPregnancyRecordsByPatientId,
-    getMenstrualRecordsByPatientId,
-    getChronicConditionsByPatientId,
     searchPatients,
     addPatient,
     deletePatient,

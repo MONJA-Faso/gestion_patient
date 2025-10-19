@@ -18,6 +18,9 @@ import {
     SuiviMedical,
     UpdateFichierConsultationData,
     UpdateSuiviMedicalData,
+    GenerateReportData,
+    ReportResponse,
+    DashboardData,
 } from "../types";
 
 // Types
@@ -175,8 +178,8 @@ export const updateSignlePatient = async (id: string, updates: Partial<Patient>)
     return data;
 }
 
-export const getAllPatients = async (): Promise<any[]> => {
-    const { data } = await api.get<any[]>('/patients/', {
+export const getAllPatients = async (): Promise<Patient[]> => {
+    const { data } = await api.get<Patient[]>('/patients/', {
         headers: authHeader()
     });
     return data;
@@ -349,4 +352,41 @@ export const deleteSuiviMedical = async (id: string): Promise<string> => {
         headers: authHeader()
     });
     return data;
+};
+
+// Reports 
+
+export const generateReport = async (reportData: GenerateReportData): Promise<ReportResponse> => {
+    try {
+        const { data } = await api.post<ReportResponse>('/reports/generate', reportData, {
+            headers: authHeader()
+        });
+        return data;
+    } catch (error: any) {
+        throw error.response ? error : new Error('Erreur lors de la génération du rapport');
+    }
+};
+
+export const downloadReport = async (fileName: string): Promise<Blob> => {
+    try {
+        const { data } = await api.get(`/reports/download/${fileName}`, {
+            headers: authHeader(),
+            responseType: 'blob'
+        });
+        return data;
+    } catch (error: any) {
+        throw error.response ? error : new Error('Erreur lors du téléchargement du rapport');
+    }
+};
+
+// Dashboard APIs
+export const getDashboardData = async (): Promise<DashboardData> => {
+    try {
+        const { data } = await api.get<DashboardData>('/dashboard', {
+            headers: authHeader()
+        });
+        return data;
+    } catch (error: any) {
+        throw error.response ? error : new Error('Erreur lors de la récupération des données du dashboard');
+    }
 };
