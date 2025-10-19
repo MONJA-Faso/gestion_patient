@@ -239,6 +239,16 @@ export interface CreateFichierConsultationData {
   creePar?: number;
 }
 
+export interface CreateFichierConsultation {
+  patientId: string;
+  motifConsultation: string;
+  diagnostic?: string;
+  prescriptions?: string;
+  observations?: string;
+  typeConsultation: 'Nouvelle' | 'Suivi';
+  creePar?: number;
+}
+
 export interface UpdateFichierConsultationData {
   motifConsultation?: string;
   diagnostic?: string;

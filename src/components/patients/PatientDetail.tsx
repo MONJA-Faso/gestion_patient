@@ -18,7 +18,7 @@ import {
   X,
   Trash2
 } from 'lucide-react';
-import { FichierConsultation, CreateFichierConsultationData, CreateSuiviMedicalData } from '../../types';
+import { FichierConsultation, CreateSuiviMedicalData, CreateFichierConsultation } from '../../types';
 
 interface PatientDetailProps {
   patientId: string;
@@ -185,17 +185,9 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({
     }
 
     try {
-      const dossierMedical = consultations.find(c => 
-        c.dossierMedical?.patientId === parseInt(patientId, 10)
-      )?.dossierMedical;
-
-      if (!dossierMedical) {
-        alert('Aucun dossier médical trouvé pour ce patient');
-        return;
-      }
-
-      const consultationData: CreateFichierConsultationData = {
-        dossierId: dossierMedical.id,
+      
+      const consultationData: CreateFichierConsultation = {
+        patientId: patientId,
         motifConsultation: newRecord.motifConsultation,
         diagnostic: newRecord.diagnostic || undefined,
         prescriptions: newRecord.prescriptions || undefined,

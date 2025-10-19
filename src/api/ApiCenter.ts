@@ -13,7 +13,6 @@ import {
     CreateDossierMedicalData,
     UpdateDossierMedicalData,
     FichierConsultation,
-    CreateFichierConsultationData,
     CreateSuiviMedicalData,
     SuiviMedical,
     UpdateFichierConsultationData,
@@ -21,6 +20,8 @@ import {
     GenerateReportData,
     ReportResponse,
     DashboardData,
+    CreateFichierConsultation,
+    CreateFichierConsultationData,
 } from "../types";
 
 // Types
@@ -296,11 +297,44 @@ export const deleteDossierMedical = async (id: string): Promise<string> => {
 };
 
 // FichierConsultation APIs
-export const createFichierConsultation = async (consultationData: CreateFichierConsultationData): Promise<FichierConsultation> => {
-    const { data } = await api.post<FichierConsultation>('/fichierConsultation/create', consultationData, {
+export const createFichierConsultation = async (consultationData: CreateFichierConsultation): Promise<FichierConsultation> => {
+
+    const patientId = consultationData.patientId;
+
+    const dossiers = await api.get<any[]>('/dossierMedical/', {
+        headers: authHeader()
+    });
+
+    console.log("+++ tout les dossier", dossiers);
+
+
+    const dossier = dossiers.data.find(d => d.patientId === parseInt(patientId));
+
+    console.log("++++ Dossier Trouver :", dossiers.data.find(d => d.patientId === parseInt(patientId)));
+
+
+    if (!dossier) {
+        throw new Error('Aucun dossier médical trouvé pour ce patient');
+    }
+
+    const payload: CreateFichierConsultationData = {
+        dossierId: Number(dossier.id),
+        motifConsultation: consultationData.motifConsultation,
+        diagnostic: consultationData.diagnostic,
+        prescriptions: consultationData.prescriptions,
+        observations: consultationData.observations,
+        typeConsultation: consultationData.typeConsultation,
+        creePar: consultationData.creePar,
+    }
+
+    console.log("** ** Payload :", payload);
+
+
+    const { data } = await api.post<FichierConsultation>('/fichierConsultation/create', payload, {
         headers: authHeader()
     });
     return data;
+
 };
 
 export const getAllFichiersConsultation = async (): Promise<FichierConsultation[]> => {

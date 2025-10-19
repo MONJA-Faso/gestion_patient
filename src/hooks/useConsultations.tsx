@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import {
     FichierConsultation,
-    CreateFichierConsultationData,
     UpdateFichierConsultationData,
     SuiviMedical,
     CreateSuiviMedicalData,
-    UpdateSuiviMedicalData
+    UpdateSuiviMedicalData,
+    CreateFichierConsultation
 } from '../types';
 import {
     createFichierConsultation,
@@ -72,7 +72,7 @@ export const useConsultations = () => {
 
 
     // CRUD pour les consultations
-    const addConsultation = async (consultationData: CreateFichierConsultationData): Promise<FichierConsultation> => {
+    const addConsultation = async (consultationData: CreateFichierConsultation): Promise<FichierConsultation> => {
         try {
             setError(null);
             const newConsultation = await createFichierConsultation(consultationData);

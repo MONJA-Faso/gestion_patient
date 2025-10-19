@@ -1,8 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useDashboard } from '../../hooks/useDashboard';
-import { usePatients } from '../../hooks/usePatients';
-import { useConsultations } from '../../hooks/useConsultations';
 import {
   BarChart,
   Bar,
@@ -11,7 +9,9 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend
+  Legend,
+  LineChart,
+  Line
 } from 'recharts';
 import {
   Users,
@@ -27,8 +27,6 @@ import {
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const { patients } = usePatients();
-  const { consultations } = useConsultations();
   const { dashboardData, loading, error, refetch } = useDashboard();
 
   if (loading) {
@@ -96,37 +94,37 @@ export const Dashboard: React.FC = () => {
   const getLast7DaysData = () => {
     const days = [];
     const today = new Date();
-    
+
     // Créer un tableau des 7 derniers jours
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(today.getDate() - i);
-      
+
       const dateString = date.toISOString().split('T')[0];
-      const formattedDate = date.toLocaleDateString('fr-FR', { 
-        day: 'numeric', 
-        month: 'short' 
+      const formattedDate = date.toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'short'
       });
-      
+
       // Compter les consultations pour ce jour
       const consultationsCount = dashboardData.consultationsByDay.filter(day => {
         const consultationDate = new Date(day.dateConsultation).toISOString().split('T')[0];
         return consultationDate === dateString;
       }).reduce((sum, day) => sum + day._count._all, 0);
-      
+
       // Compter les nouveaux patients pour ce jour
       const newPatientsCount = dashboardData.newPatientsByDay.filter(day => {
         const creationDate = new Date(day.dateCreation).toISOString().split('T')[0];
         return creationDate === dateString;
       }).reduce((sum, day) => sum + day._count._all, 0);
-      
+
       days.push({
         date: formattedDate,
         consultations: consultationsCount,
         nouveauxPatients: newPatientsCount
       });
     }
-    
+
     return days;
   };
 
@@ -224,15 +222,15 @@ export const Dashboard: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis />
-                <Tooltip 
+                <Tooltip
                   formatter={(value) => [value, 'Nombre']}
                   labelFormatter={(label) => `Date: ${label}`}
                 />
                 <Legend />
-                <Bar 
-                  dataKey="consultations" 
+                <Bar
+                  dataKey="consultations"
                   name="Consultations"
-                  fill="#3b82f6" 
+                  fill="#3b82f6"
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>
@@ -247,22 +245,25 @@ export const Dashboard: React.FC = () => {
           </h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
+              <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis />
-                <Tooltip 
+                <Tooltip
                   formatter={(value) => [value, 'Nombre']}
                   labelFormatter={(label) => `Date: ${label}`}
                 />
                 <Legend />
-                <Bar 
-                  dataKey="nouveauxPatients" 
+                <Line
+                  type="monotone"
+                  dataKey="nouveauxPatients"
                   name="Nouveaux patients"
-                  fill="#10b981" 
-                  radius={[4, 4, 0, 0]}
+                  stroke="#10b981"
+                  strokeWidth={3}
+                  dot={{ fill: '#10b981', strokeWidth: 2, r: 6 }}
+                  activeDot={{ r: 8, fill: '#059669' }}
                 />
-              </BarChart>
+              </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
