@@ -1,36 +1,72 @@
 import { useState, useEffect } from 'react';
 import { Appointment } from '../types';
-import { mockAppointments } from '../data/mockData';
+import { addNewAppointment, deleteSingleAppointment, fetchAllApointement, updateSingleAppointment } from '../api/ApiCenter';
 
 export const useAppointments = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulation du chargement des données
+
+    loadAppointement();
     setTimeout(() => {
-      setAppointments(mockAppointments);
       setLoading(false);
     }, 500);
   }, []);
 
-  const addAppointment = (appointmentData: Omit<Appointment, 'id'>) => {
-    const newAppointment: Appointment = {
-      ...appointmentData,
-      id: Date.now().toString()
-    };
-    setAppointments(prev => [...prev, newAppointment]);
+  const loadAppointement = async () => {
+    try {
+      const appointments = await fetchAllApointement();
+      setAppointments(appointments)
+    } catch (error: any) {
+      console.error("Erreur lors du chargement des patients:", error.message);
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const addAppointment = async (appointmentData: Omit<Appointment, 'id'>) => {
+    const newAppointment = addNewAppointment(appointmentData);
+    setLoading(true)
+    setTimeout(async () => {
+      setAppointments(await getAllAppointment());
+      setLoading(false)
+    }, 500)
     return newAppointment;
   };
 
+  const getAllAppointment = async () => {
+    const allAppointment = await fetchAllApointement();
+    return allAppointment;
+  }
+
   const updateAppointment = (id: string, updates: Partial<Appointment>) => {
-    setAppointments(prev => prev.map(a => 
-      a.id === id ? { ...a, ...updates } : a
-    ));
+    try {
+      updateSingleAppointment(id, updates)
+      setLoading(true)
+      setTimeout(async () => {
+        setAppointments(await getAllAppointment());
+        setLoading(false)
+      }, 500)
+    } catch (error: any) {
+      console.error("Erreur lors de la modification du Rendez-vous !", error);
+    }
   };
 
   const deleteAppointment = (id: string) => {
-    setAppointments(prev => prev.filter(a => a.id !== id));
+    console.log("Id rvd :", id);
+
+    try {
+      deleteSingleAppointment(id)
+      setLoading(true)
+      setTimeout(async () => {
+        setAppointments(await getAllAppointment());
+        setLoading(false)
+      }, 500)
+    } catch (error: any) {
+      console.error("Erreur lors de la suppression du Rendez-vous !", error);
+    }
+
   };
 
   const getAppointmentById = (id: string) => {
@@ -42,11 +78,11 @@ export const useAppointments = () => {
   };
 
   const getAppointmentsByDoctorId = (doctorId: string) => {
-    return appointments.filter(a => a.doctorId === doctorId);
+    return appointments.filter(a => a.medecinId === doctorId);
   };
 
-  const getAppointmentsByDate = (date: string) => {
-    return appointments.filter(a => a.appointmentDate === date);
+  const getAppointmentsByDate = (date: Date) => {
+    return appointments.filter(a => a.dateHeure === date);
   };
 
   return {
@@ -55,6 +91,7 @@ export const useAppointments = () => {
     addAppointment,
     updateAppointment,
     deleteAppointment,
+    getAllAppointment,
     getAppointmentById,
     getAppointmentsByPatientId,
     getAppointmentsByDoctorId,

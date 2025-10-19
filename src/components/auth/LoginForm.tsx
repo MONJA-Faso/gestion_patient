@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { Heart, Eye, EyeOff, Lock, User } from 'lucide-react';
-// import { loginUser } from '../../api/ApiCenter';
+import { Heart, Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 interface LoginFormProps {
   isRegister: boolean;
@@ -9,7 +9,7 @@ interface LoginFormProps {
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ isRegister, setIsRegister }) => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -19,28 +19,37 @@ export const LoginForm: React.FC<LoginFormProps> = ({ isRegister, setIsRegister 
     e.preventDefault();
     setError('');
 
-    if (!username || !password) {
+    if (!email || !password) {
       setError('Veuillez remplir tous les champs');
       return;
     }
 
-    const success = await login(username, password);
-    console.log(success);
-    
+    const success = await login(email, password);
+
+    console.log("Login success:", success);
+
+
     if (!success) {
       setError('Identifiants incorrects');
+      Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: "Échec de la connexion. Veuillez vérifier vos identifiants.",
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#d33'
+      });
     }
   };
 
   const demoAccounts = [
-    { username: 'marie.RAZA', role: 'Secrétaire', password: 'demo123' },
-    { username: 'sophie.ZETY', role: 'Infirmière', password: 'demo123' },
-    { username: 'dr.MONJA', role: 'Médecin-Chef', password: 'demo123' }
+    { email: 'marie.raza@example.com', role: 'Secrétaire', password: 'demo123' },
+    { email: 'sophie.zety@example.com', role: 'Infirmière', password: 'demo123' },
+    { email: 'dr.monja@example.com', role: 'Médecin-Chef', password: 'demo123' }
   ];
 
   useEffect(() => {
     console.log(isRegister);
-  })
+  }, [isRegister]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -58,18 +67,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({ isRegister, setIsRegister 
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Nom d'utilisateur
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <input
-                  type="text"
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Entrez votre nom d'utilisateur"
+                  placeholder="Entrez votre email"
                   disabled={isLoading}
                 />
               </div>
@@ -136,11 +145,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ isRegister, setIsRegister 
               <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="font-medium text-gray-900">{account.role}</p>
-                  <p className="text-sm text-gray-600">{account.username}</p>
+                  <p className="text-sm text-gray-600">{account.email}</p>
                 </div>
                 <button
                   onClick={() => {
-                    setUsername(account.username);
+                    setEmail(account.email);
                     setPassword(account.password);
                   }}
                   className="text-sm text-blue-600 hover:text-blue-700 font-medium"

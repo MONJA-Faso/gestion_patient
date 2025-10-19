@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { usePatients } from '../../hooks/usePatients';
 import { useAuth } from '../../hooks/useAuth';
-import { 
-  ArrowLeft, 
-  User, 
-  Phone, 
-  Mail, 
-  MapPin, 
+import { useConsultations } from '../../hooks/useConsultations';
+import {
+  ArrowLeft,
+  User,
+  MapPin,
   Calendar,
   FileText,
   Heart,
@@ -16,47 +15,137 @@ import {
   Plus,
   Edit,
   Save,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
+import { FichierConsultation, CreateSuiviMedicalData, CreateFichierConsultation } from '../../types';
 
 interface PatientDetailProps {
   patientId: string;
+  currentTab: string;
   onBack: () => void;
+  consultations: FichierConsultation[];
+  onConsultationsUpdate: () => void;
 }
 
-export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack }) => {
-  const { 
-    getPatientById, 
-    getMedicalRecordsByPatientId,
-    getPregnancyRecordsByPatientId,
-    getMenstrualRecordsByPatientId,
-    getChronicConditionsByPatientId,
-    addMedicalRecord
+export const PatientDetail: React.FC<PatientDetailProps> = ({ 
+  patientId, 
+  onBack, 
+  currentTab, 
+  consultations,
+  onConsultationsUpdate 
+}) => {
+  const {
+    getPatientById
   } = usePatients();
   const { user } = useAuth();
-  
+  const { 
+    addConsultation, 
+    updateConsultation, 
+    removeConsultation,
+    addSuivi,
+    removeSuivi,
+  } = useConsultations();
+
   const [activeTab, setActiveTab] = useState('overview');
   const [isAddingRecord, setIsAddingRecord] = useState(false);
+  const [isEditingRecord, setIsEditingRecord] = useState<string | null>(null);
+  const [isAddingSuivi, setIsAddingSuivi] = useState<string | null>(null);
   const [newRecord, setNewRecord] = useState({
-    consultationReason: '',
-    diagnosis: '',
-    treatment: '',
-    dosage: '',
-    notes: '',
-    vitals: {
-      temperature: '',
-      bloodPressure: '',
-      heartRate: '',
-      weight: '',
-      height: ''
-    }
+    motifConsultation: '',
+    diagnostic: '',
+    prescriptions: '',
+    observations: '',
+    typeConsultation: 'Nouvelle' as 'Nouvelle' | 'Suivi'
+  });
+  const [newSuivi, setNewSuivi] = useState({
+    typeSuivi: 'Grossesse' as 'Grossesse' | 'Cycle' | 'Pathologie_Chronique',
+    details: '',
+    dateSuivi: new Date().toISOString().split('T')[0]
   });
 
+  console.log("Patient ID :", patientId);
+
+  useEffect(() => {
+    setActiveTab(currentTab);
+    console.log("*** *** Dossiers in PatientDetail:", consultations);
+    console.log("+++ +++ :", fetchConsultationsByDossier(patientId));
+  }, [currentTab]);
+
+  const fetchConsultationsByDossier = (patientId: string): FichierConsultation[] => {
+    return consultations.filter(consultation => (
+      consultation.dossierMedical?.patientId === parseInt(patientId, 10)
+    ));
+  };
+
+  // Fonctions pour extraire les suivis par type
+  const getPregnancyFollowUps = useMemo(() => {
+    const patientConsultations = fetchConsultationsByDossier(patientId);
+    const pregnancyFollowUps: any[] = [];
+
+    patientConsultations.forEach(consultation => {
+      consultation.suivisMedicaux?.forEach(suivi => {
+        if (suivi.typeSuivi === 'Grossesse') {
+          pregnancyFollowUps.push({
+            ...suivi,
+            consultation: {
+              date: consultation.dateConsultation,
+              motif: consultation.motifConsultation,
+              medecin: consultation.utilisateurCreateur
+            }
+          });
+        }
+      });
+    });
+
+    return pregnancyFollowUps.sort((a, b) => new Date(b.dateSuivi).getTime() - new Date(a.dateSuivi).getTime());
+  }, [patientId, consultations]);
+
+  const getMenstrualFollowUps = useMemo(() => {
+    const patientConsultations = fetchConsultationsByDossier(patientId);
+    const menstrualFollowUps: any[] = [];
+
+    patientConsultations.forEach(consultation => {
+      consultation.suivisMedicaux?.forEach(suivi => {
+        if (suivi.typeSuivi === 'Cycle') {
+          menstrualFollowUps.push({
+            ...suivi,
+            consultation: {
+              date: consultation.dateConsultation,
+              motif: consultation.motifConsultation,
+              medecin: consultation.utilisateurCreateur
+            }
+          });
+        }
+      });
+    });
+
+    return menstrualFollowUps.sort((a, b) => new Date(b.dateSuivi).getTime() - new Date(a.dateSuivi).getTime());
+  }, [patientId, consultations]);
+
+  const getChronicConditionFollowUps = useMemo(() => {
+    const patientConsultations = fetchConsultationsByDossier(patientId);
+    const chronicFollowUps: any[] = [];
+
+    patientConsultations.forEach(consultation => {
+      consultation.suivisMedicaux?.forEach(suivi => {
+        if (suivi.typeSuivi === 'Pathologie_Chronique') {
+          chronicFollowUps.push({
+            ...suivi,
+            consultation: {
+              date: consultation.dateConsultation,
+              motif: consultation.motifConsultation,
+              medecin: consultation.utilisateurCreateur
+            }
+          });
+        }
+      });
+    });
+
+    return chronicFollowUps.sort((a, b) => new Date(b.dateSuivi).getTime() - new Date(a.dateSuivi).getTime());
+  }, [patientId, consultations]);
+
   const patient = getPatientById(patientId);
-  const medicalRecords = getMedicalRecordsByPatientId(patientId);
-  const pregnancyRecords = getPregnancyRecordsByPatientId(patientId);
-  const menstrualRecords = getMenstrualRecordsByPatientId(patientId);
-  const chronicConditions = getChronicConditionsByPatientId(patientId);
 
   if (!patient) {
     return (
@@ -86,60 +175,136 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
     return age;
   };
 
-  const age = getAgeFromBirthDate(patient.dateOfBirth);
+  const age = getAgeFromBirthDate(patient.dateNaissance);
 
-  const handleAddMedicalRecord = () => {
-    if (!newRecord.consultationReason || !newRecord.diagnosis) {
-      alert('Veuillez remplir au moins le motif et le diagnostic');
+  // Gestion des consultations
+  const handleAddConsultation = async () => {
+    if (!newRecord.motifConsultation) {
+      alert('Veuillez remplir au moins le motif de consultation');
       return;
     }
 
-    const record = {
-      patientId: patient.id,
-      consultationDate: new Date().toISOString(),
-      consultationReason: newRecord.consultationReason,
-      diagnosis: newRecord.diagnosis,
-      treatment: newRecord.treatment,
-      dosage: newRecord.dosage,
-      notes: newRecord.notes,
-      doctorId: user!.id,
-      nurseId: user!.role === 'nurse' ? user!.id : undefined,
-      vitals: {
-        temperature: newRecord.vitals.temperature ? parseFloat(newRecord.vitals.temperature) : undefined,
-        bloodPressure: newRecord.vitals.bloodPressure || undefined,
-        heartRate: newRecord.vitals.heartRate ? parseInt(newRecord.vitals.heartRate) : undefined,
-        weight: newRecord.vitals.weight ? parseFloat(newRecord.vitals.weight) : undefined,
-        height: newRecord.vitals.height ? parseFloat(newRecord.vitals.height) : undefined,
-      }
-    };
+    try {
+      
+      const consultationData: CreateFichierConsultation = {
+        patientId: patientId,
+        motifConsultation: newRecord.motifConsultation,
+        diagnostic: newRecord.diagnostic || undefined,
+        prescriptions: newRecord.prescriptions || undefined,
+        observations: newRecord.observations || undefined,
+        typeConsultation: newRecord.typeConsultation,
+        creePar: user?.id ? Number(user.id) : 1
+      };
 
-    addMedicalRecord(record);
-    setIsAddingRecord(false);
-    setNewRecord({
-      consultationReason: '',
-      diagnosis: '',
-      treatment: '',
-      dosage: '',
-      notes: '',
-      vitals: {
-        temperature: '',
-        bloodPressure: '',
-        heartRate: '',
-        weight: '',
-        height: ''
+      await addConsultation(consultationData);
+      setIsAddingRecord(false);
+      setNewRecord({
+        motifConsultation: '',
+        diagnostic: '',
+        prescriptions: '',
+        observations: '',
+        typeConsultation: 'Nouvelle'
+      });
+      onConsultationsUpdate(); // Rafraîchir la liste des consultations
+    } catch (err) {
+      console.error('Erreur lors de la création de la consultation:', err);
+    }
+  };
+
+  const handleUpdateConsultation = async (consultationId: string) => {
+    try {
+      await updateConsultation(consultationId, {
+        motifConsultation: newRecord.motifConsultation,
+        diagnostic: newRecord.diagnostic || undefined,
+        prescriptions: newRecord.prescriptions || undefined,
+        observations: newRecord.observations || undefined,
+        typeConsultation: newRecord.typeConsultation
+      });
+      setIsEditingRecord(null);
+      setNewRecord({
+        motifConsultation: '',
+        diagnostic: '',
+        prescriptions: '',
+        observations: '',
+        typeConsultation: 'Nouvelle'
+      });
+      onConsultationsUpdate();
+    } catch (err) {
+      console.error('Erreur lors de la modification de la consultation:', err);
+    }
+  };
+
+  const handleDeleteConsultation = async (consultationId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette consultation ?')) {
+      try {
+        await removeConsultation(consultationId);
+        onConsultationsUpdate();
+      } catch (err) {
+        console.error('Erreur lors de la suppression de la consultation:', err);
       }
+    }
+  };
+
+  // Gestion des suivis
+  const handleAddSuivi = async (consultationId: string) => {
+    if (!newSuivi.details) {
+      alert('Veuillez remplir les détails du suivi');
+      return;
+    }
+
+    try {
+      const suiviData: CreateSuiviMedicalData = {
+        fichierConsultationId: parseInt(consultationId, 10),
+        typeSuivi: newSuivi.typeSuivi,
+        details: newSuivi.details,
+        dateSuivi: newSuivi.dateSuivi
+      };
+
+      await addSuivi(suiviData);
+      setIsAddingSuivi(null);
+      setNewSuivi({
+        typeSuivi: 'Grossesse',
+        details: '',
+        dateSuivi: new Date().toISOString().split('T')[0]
+      });
+      onConsultationsUpdate();
+    } catch (err) {
+      console.error('Erreur lors de la création du suivi:', err);
+    }
+  };
+
+  const handleDeleteSuivi = async (suiviId: string) => {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce suivi ?')) {
+      try {
+        await removeSuivi(suiviId);
+        onConsultationsUpdate();
+      } catch (err) {
+        console.error('Erreur lors de la suppression du suivi:', err);
+      }
+    }
+  };
+
+  // Pré-remplir le formulaire d'édition
+  const startEditConsultation = (consultation: FichierConsultation) => {
+    setIsEditingRecord(consultation.id.toString());
+    setNewRecord({
+      motifConsultation: consultation.motifConsultation,
+      diagnostic: consultation.diagnostic || '',
+      prescriptions: consultation.prescriptions || '',
+      observations: consultation.observations || '',
+      typeConsultation: consultation.typeConsultation as 'Nouvelle' | 'Suivi'
     });
   };
 
   const tabs = [
     { id: 'overview', label: 'Vue d\'ensemble', icon: User },
-    { id: 'medical', label: 'Dossier Médical', icon: FileText },
+    { id: 'medical', label: 'Consultations', icon: FileText },
     { id: 'pregnancy', label: 'Suivi Grossesse', icon: Baby },
     { id: 'menstrual', label: 'Cycle Menstruel', icon: Heart },
     { id: 'chronic', label: 'Pathologies', icon: Activity }
   ];
 
-  const canAccessMedical = user?.role !== 'secretary';
+  const canAccessMedical = user?.role !== 'Secretaire';
 
   return (
     <div className="space-y-6">
@@ -153,7 +318,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
             <ArrowLeft className="h-5 w-5" />
             <span>Retour à la liste</span>
           </button>
-          
+
           <div className="flex items-center space-x-2">
             <button className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors duration-200">
               <Edit className="h-4 w-4" />
@@ -163,19 +328,18 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
         </div>
 
         <div className="flex items-center space-x-6">
-          <div className={`w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold ${
-            patient.gender === 'female' ? 'bg-pink-500' : 'bg-blue-500'
-          }`}>
-            {patient.firstName[0]}{patient.lastName[0]}
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold ${patient.sexe === 'Féminin' ? 'bg-pink-500' : 'bg-blue-500'
+            }`}>
+            {patient.prenom[0]}{patient.nom[0]}
           </div>
-          
+
           <div className="flex-1">
             <div className="flex items-center space-x-3 mb-2">
               <h1 className="text-3xl font-bold text-gray-900">
-                {patient.firstName} {patient.lastName}
+                {patient.prenom} {patient.nom}
               </h1>
               <span className="text-lg text-gray-600">
-                ({age} ans, {patient.gender === 'male' ? 'Homme' : 'Femme'})
+                ({age} ans, {patient.sexe === 'Masculin' ? 'Homme' : 'Femme'})
               </span>
               {age < 18 && (
                 <span className="inline-block px-3 py-1 text-sm font-medium bg-orange-100 text-orange-800 rounded-full">
@@ -183,30 +347,17 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                 </span>
               )}
             </div>
-            
-            <p className="text-gray-600 mb-4">N° {patient.patientNumber}</p>
-            
+
+            <p className="text-gray-600 mb-4">N° {patient.id}</p>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
               <div className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-gray-400" />
-                <span>{patient.phone}</span>
-              </div>
-              
-              {patient.email && (
-                <div className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4 text-gray-400" />
-                  <span>{patient.email}</span>
-                </div>
-              )}
-              
-              <div className="flex items-center space-x-2">
                 <Calendar className="h-4 w-4 text-gray-400" />
-                <span>{new Date(patient.dateOfBirth).toLocaleDateString('fr-FR')}</span>
+                <span>{new Date(patient.dateNaissance).toLocaleDateString('fr-FR')}</span>
               </div>
-              
               <div className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4 text-gray-400" />
-                <span className="truncate">{patient.address}</span>
+                <span className="truncate">{patient.adresse}</span>
               </div>
             </div>
           </div>
@@ -227,13 +378,12 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                   key={tab.id}
                   onClick={() => isAccessible && setActiveTab(tab.id)}
                   disabled={!isAccessible}
-                  className={`flex items-center whitespace-nowrap space-x-2 py-4 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                    isActive
-                      ? 'border-blue-500 text-blue-600'
-                      : isAccessible
-                        ? 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                        : 'border-transparent text-gray-300 cursor-not-allowed'
-                  }`}
+                  className={`flex items-center whitespace-nowrap space-x-2 py-4 border-b-2 font-medium text-sm transition-colors duration-200 ${isActive
+                    ? 'border-blue-500 text-blue-600'
+                    : isAccessible
+                      ? 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      : 'border-transparent text-gray-300 cursor-not-allowed'
+                    }`}
                 >
                   <Icon className="h-5 w-5 flex-shrink-0" />
                   <span>{tab.label}</span>
@@ -242,8 +392,6 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
             })}
           </nav>
         </div>
-
-
 
         {/* Contenu des onglets */}
         <div className="p-6">
@@ -255,51 +403,25 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                   <div className="space-y-3">
                     <div>
                       <label className="text-sm font-medium text-gray-700">Nom complet</label>
-                      <p className="text-gray-900">{patient.firstName} {patient.lastName}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Date de naissance</label>
-                      <p className="text-gray-900">{new Date(patient.dateOfBirth).toLocaleDateString('fr-FR')}</p>
+                      <p className="text-gray-900">{patient.prenom} {patient.nom}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-700">Genre</label>
-                      <p className="text-gray-900">{patient.gender === 'male' ? 'Homme' : 'Femme'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Adresse</label>
-                      <p className="text-gray-900">{patient.address}</p>
+                      <p className="text-gray-900">{patient.sexe === 'Masculin' ? 'Homme' : 'Femme'}</p>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 opacity-0">Informations Personnelles</h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Téléphone</label>
-                      <p className="text-gray-900">{patient.phone}</p>
-                    </div>
-                    {patient.email && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Email</label>
-                        <p className="text-gray-900">{patient.email}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 mt-6">Contact d'urgence</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Nom</label>
-                      <p className="text-gray-900">{patient.emergencyContact.name}</p>
+                      <label className="text-sm font-medium text-gray-700">Date de naissance</label>
+                      <p className="text-gray-900">{new Date(patient.dateNaissance).toLocaleDateString('fr-FR')}</p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">Téléphone</label>
-                      <p className="text-gray-900">{patient.emergencyContact.phone}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Relation</label>
-                      <p className="text-gray-900">{patient.emergencyContact.relationship}</p>
+                      <label className="text-sm font-medium text-gray-700">Adresse</label>
+                      <p className="text-gray-900">{patient.adresse}</p>
                     </div>
                   </div>
                 </div>
@@ -310,7 +432,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
           {activeTab === 'medical' && canAccessMedical && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Historique Médical</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Historique des Consultations</h3>
                 <button
                   onClick={() => setIsAddingRecord(true)}
                   className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
@@ -320,12 +442,25 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                 </button>
               </div>
 
-              {isAddingRecord && (
+              {/* Formulaire d'ajout/modification de consultation */}
+              {(isAddingRecord || isEditingRecord) && (
                 <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-lg font-semibold text-gray-900">Nouvelle Consultation</h4>
+                    <h4 className="text-lg font-semibold text-gray-900">
+                      {isEditingRecord ? 'Modifier la Consultation' : 'Nouvelle Consultation'}
+                    </h4>
                     <button
-                      onClick={() => setIsAddingRecord(false)}
+                      onClick={() => {
+                        setIsAddingRecord(false);
+                        setIsEditingRecord(null);
+                        setNewRecord({
+                          motifConsultation: '',
+                          diagnostic: '',
+                          prescriptions: '',
+                          observations: '',
+                          typeConsultation: 'Nouvelle'
+                        });
+                      }}
                       className="text-gray-400 hover:text-gray-600"
                     >
                       <X className="h-5 w-5" />
@@ -339,8 +474,8 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                       </label>
                       <input
                         type="text"
-                        value={newRecord.consultationReason}
-                        onChange={(e) => setNewRecord({ ...newRecord, consultationReason: e.target.value })}
+                        value={newRecord.motifConsultation}
+                        onChange={(e) => setNewRecord({ ...newRecord, motifConsultation: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Ex: Contrôle, Douleurs..."
                       />
@@ -348,236 +483,247 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Diagnostic *
+                        Type de consultation
                       </label>
-                      <input
-                        type="text"
-                        value={newRecord.diagnosis}
-                        onChange={(e) => setNewRecord({ ...newRecord, diagnosis: e.target.value })}
+                      <select
+                        value={newRecord.typeConsultation}
+                        onChange={(e) => setNewRecord({ ...newRecord, typeConsultation: e.target.value as 'Nouvelle' | 'Suivi' })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="Nouvelle">Nouvelle</option>
+                        <option value="Suivi">Suivi</option>
+                      </select>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Diagnostic
+                      </label>
+                      <textarea
+                        value={newRecord.diagnostic}
+                        onChange={(e) => setNewRecord({ ...newRecord, diagnostic: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Diagnostic médical"
+                        rows={2}
                       />
                     </div>
 
-                    <div>
+                    <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Traitement
+                        Prescriptions
                       </label>
-                      <input
-                        type="text"
-                        value={newRecord.treatment}
-                        onChange={(e) => setNewRecord({ ...newRecord, treatment: e.target.value })}
+                      <textarea
+                        value={newRecord.prescriptions}
+                        onChange={(e) => setNewRecord({ ...newRecord, prescriptions: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Médicaments prescrits"
+                        rows={2}
                       />
                     </div>
 
-                    <div>
+                    <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Posologie
+                        Observations
                       </label>
-                      <input
-                        type="text"
-                        value={newRecord.dosage}
-                        onChange={(e) => setNewRecord({ ...newRecord, dosage: e.target.value })}
+                      <textarea
+                        value={newRecord.observations}
+                        onChange={(e) => setNewRecord({ ...newRecord, observations: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Ex: 2 fois par jour"
+                        placeholder="Notes supplémentaires"
+                        rows={3}
                       />
                     </div>
-                  </div>
-
-                  {/* Constantes vitales */}
-                  <div className="mb-4">
-                    <h5 className="text-sm font-medium text-gray-700 mb-2">Constantes vitales</h5>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Température (°C)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={newRecord.vitals.temperature}
-                          onChange={(e) => setNewRecord({ 
-                            ...newRecord, 
-                            vitals: { ...newRecord.vitals, temperature: e.target.value }
-                          })}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                          placeholder="36.5"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Tension</label>
-                        <input
-                          type="text"
-                          value={newRecord.vitals.bloodPressure}
-                          onChange={(e) => setNewRecord({ 
-                            ...newRecord, 
-                            vitals: { ...newRecord.vitals, bloodPressure: e.target.value }
-                          })}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                          placeholder="120/80"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Pouls (bpm)</label>
-                        <input
-                          type="number"
-                          value={newRecord.vitals.heartRate}
-                          onChange={(e) => setNewRecord({ 
-                            ...newRecord, 
-                            vitals: { ...newRecord.vitals, heartRate: e.target.value }
-                          })}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                          placeholder="70"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Poids (kg)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={newRecord.vitals.weight}
-                          onChange={(e) => setNewRecord({ 
-                            ...newRecord, 
-                            vitals: { ...newRecord.vitals, weight: e.target.value }
-                          })}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                          placeholder="70.0"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Taille (cm)</label>
-                        <input
-                          type="number"
-                          value={newRecord.vitals.height}
-                          onChange={(e) => setNewRecord({ 
-                            ...newRecord, 
-                            vitals: { ...newRecord.vitals, height: e.target.value }
-                          })}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
-                          placeholder="170"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Notes complémentaires
-                    </label>
-                    <textarea
-                      value={newRecord.notes}
-                      onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      rows={3}
-                      placeholder="Observations, recommandations..."
-                    />
                   </div>
 
                   <div className="flex justify-end space-x-3">
                     <button
-                      onClick={() => setIsAddingRecord(false)}
+                      onClick={() => {
+                        setIsAddingRecord(false);
+                        setIsEditingRecord(null);
+                        setNewRecord({
+                          motifConsultation: '',
+                          diagnostic: '',
+                          prescriptions: '',
+                          observations: '',
+                          typeConsultation: 'Nouvelle'
+                        });
+                      }}
                       className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
                     >
                       Annuler
                     </button>
                     <button
-                      onClick={handleAddMedicalRecord}
+                      onClick={() => isEditingRecord ? handleUpdateConsultation(isEditingRecord) : handleAddConsultation()}
                       className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
                     >
                       <Save className="h-4 w-4" />
-                      <span>Enregistrer</span>
+                      <span>{isEditingRecord ? 'Modifier' : 'Enregistrer'}</span>
                     </button>
                   </div>
                 </div>
               )}
 
+              {/* Liste des consultations */}
               <div className="space-y-4">
-                {medicalRecords.length === 0 ? (
+                {fetchConsultationsByDossier(patientId).length === 0 ? (
                   <div className="text-center py-8">
                     <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Aucun dossier médical</h4>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Aucune consultation</h4>
                     <p className="text-gray-600">Ce patient n'a pas encore de consultation enregistrée.</p>
                   </div>
                 ) : (
-                  medicalRecords
-                    .sort((a, b) => new Date(b.consultationDate).getTime() - new Date(a.consultationDate).getTime())
-                    .map((record) => (
-                      <div key={record.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                  fetchConsultationsByDossier(patientId)
+                    .sort((a: FichierConsultation, b: FichierConsultation) => new Date(b.dateConsultation).getTime() - new Date(a.dateConsultation).getTime())
+                    .map((consultation: FichierConsultation) => (
+                      <div key={consultation.id} className="bg-white border border-gray-200 rounded-lg p-6">
                         <div className="flex items-start justify-between mb-4">
                           <div>
-                            <h4 className="font-semibold text-gray-900">{record.consultationReason}</h4>
+                            <h4 className="font-semibold text-gray-900">{consultation.motifConsultation}</h4>
                             <p className="text-sm text-gray-600">
-                              {new Date(record.consultationDate).toLocaleDateString('fr-FR', {
+                              {new Date(consultation.dateConsultation).toLocaleDateString('fr-FR', {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit'
-                              })}
+                              })} - {consultation.typeConsultation}
                             </p>
+                            <p className="text-sm text-gray-500 mt-1">
+                              Par Dr. {consultation.utilisateurCreateur.prenom} {consultation.utilisateurCreateur.nom}
+                            </p>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => startEditConsultation(consultation)}
+                              className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteConsultation(consultation.id.toString())}
+                              className="text-red-600 hover:text-red-800 transition-colors duration-200"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                           <div>
                             <label className="text-sm font-medium text-gray-700">Diagnostic</label>
-                            <p className="text-gray-900">{record.diagnosis}</p>
+                            <p className="text-gray-900">
+                              {consultation.diagnostic || 'Aucun diagnostic spécifié'}
+                            </p>
                           </div>
-                          {record.treatment && (
+
+                          {consultation.prescriptions && (
                             <div>
-                              <label className="text-sm font-medium text-gray-700">Traitement</label>
-                              <p className="text-gray-900">{record.treatment}</p>
-                              {record.dosage && (
-                                <p className="text-sm text-gray-600">{record.dosage}</p>
-                              )}
+                              <label className="text-sm font-medium text-gray-700">Prescriptions</label>
+                              <p className="text-gray-900">{consultation.prescriptions}</p>
                             </div>
                           )}
                         </div>
 
-                        {record.vitals && (
+                        {consultation.observations && (
                           <div className="mb-4">
-                            <label className="text-sm font-medium text-gray-700 mb-2 block">Constantes vitales</label>
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-                              {record.vitals.temperature && (
-                                <div>
-                                  <span className="text-gray-600">Température:</span>
-                                  <span className="ml-1 font-medium">{record.vitals.temperature}°C</span>
-                                </div>
-                              )}
-                              {record.vitals.bloodPressure && (
-                                <div>
-                                  <span className="text-gray-600">Tension:</span>
-                                  <span className="ml-1 font-medium">{record.vitals.bloodPressure}</span>
-                                </div>
-                              )}
-                              {record.vitals.heartRate && (
-                                <div>
-                                  <span className="text-gray-600">Pouls:</span>
-                                  <span className="ml-1 font-medium">{record.vitals.heartRate} bpm</span>
-                                </div>
-                              )}
-                              {record.vitals.weight && (
-                                <div>
-                                  <span className="text-gray-600">Poids:</span>
-                                  <span className="ml-1 font-medium">{record.vitals.weight} kg</span>
-                                </div>
-                              )}
-                              {record.vitals.height && (
-                                <div>
-                                  <span className="text-gray-600">Taille:</span>
-                                  <span className="ml-1 font-medium">{record.vitals.height} cm</span>
-                                </div>
-                              )}
-                            </div>
+                            <label className="text-sm font-medium text-gray-700">Observations</label>
+                            <p className="text-gray-900">{consultation.observations}</p>
                           </div>
                         )}
 
-                        {record.notes && (
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">Notes</label>
-                            <p className="text-gray-900">{record.notes}</p>
+                        {/* Gestion des suivis pour cette consultation */}
+                        <div className="border-t pt-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <label className="text-sm font-medium text-gray-700">Suivis médicaux</label>
+                            <button
+                              onClick={() => setIsAddingSuivi(consultation.id.toString())}
+                              className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-800"
+                            >
+                              <Plus className="h-3 w-3" />
+                              <span>Ajouter un suivi</span>
+                            </button>
                           </div>
-                        )}
+
+                          {/* Formulaire d'ajout de suivi */}
+                          {isAddingSuivi === consultation.id.toString() && (
+                            <div className="bg-gray-50 rounded p-4 mb-3">
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">Type</label>
+                                  <select
+                                    value={newSuivi.typeSuivi}
+                                    onChange={(e) => setNewSuivi({ ...newSuivi, typeSuivi: e.target.value as any })}
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                                  >
+                                    <option value="Grossesse">Grossesse</option>
+                                    <option value="Cycle">Cycle</option>
+                                    <option value="Pathologie_Chronique">Pathologie Chronique</option>
+                                  </select>
+                                </div>
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">Date</label>
+                                  <input
+                                    type="date"
+                                    value={newSuivi.dateSuivi}
+                                    onChange={(e) => setNewSuivi({ ...newSuivi, dateSuivi: e.target.value })}
+                                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                                  />
+                                </div>
+                                <div className="flex items-end space-x-2">
+                                  <button
+                                    onClick={() => handleAddSuivi(consultation.id.toString())}
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 text-sm rounded transition-colors duration-200"
+                                  >
+                                    Ajouter
+                                  </button>
+                                  <button
+                                    onClick={() => setIsAddingSuivi(null)}
+                                    className="px-2 py-1 text-gray-600 hover:text-gray-800 text-sm"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Détails</label>
+                                <textarea
+                                  value={newSuivi.details}
+                                  onChange={(e) => setNewSuivi({ ...newSuivi, details: e.target.value })}
+                                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                                  placeholder="Détails du suivi..."
+                                  rows={2}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Liste des suivis */}
+                          {consultation.suivisMedicaux && consultation.suivisMedicaux.length > 0 ? (
+                            <div className="space-y-2">
+                              {consultation.suivisMedicaux.map((suivi) => (
+                                <div key={suivi.id} className="bg-gray-50 rounded p-3 border-l-4 border-blue-500 flex justify-between items-start">
+                                  <div className="flex-1">
+                                    <div className="flex items-center justify-between text-sm mb-1">
+                                      <span className="font-medium text-gray-900">{suivi.typeSuivi}</span>
+                                      <span className="text-gray-600">
+                                        {new Date(suivi.dateSuivi).toLocaleDateString('fr-FR')}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-gray-600">{suivi.details}</p>
+                                  </div>
+                                  <button
+                                    onClick={() => handleDeleteSuivi(suivi.id.toString())}
+                                    className="ml-2 text-red-600 hover:text-red-800 transition-colors duration-200"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500 text-center py-2">Aucun suivi enregistré</p>
+                          )}
+                        </div>
                       </div>
                     ))
                 )}
@@ -585,11 +731,11 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
             </div>
           )}
 
+          {/* Les autres onglets (pregnancy, menstrual, chronic) restent inchangés */}
           {activeTab === 'pregnancy' && canAccessMedical && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900">Suivi de Grossesse</h3>
-              
-              {pregnancyRecords.length === 0 ? (
+              {getPregnancyFollowUps.length === 0 ? (
                 <div className="text-center py-8">
                   <Baby className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">Aucun suivi de grossesse</h4>
@@ -597,51 +743,19 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {pregnancyRecords.map((pregnancy) => (
-                    <div key={pregnancy.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                  {getPregnancyFollowUps.map((suivi) => (
+                    <div key={suivi.id} className="bg-white border border-gray-200 rounded-lg p-6">
                       <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-semibold text-gray-900">
-                          Grossesse #{pregnancy.pregnancyNumber}
-                        </h4>
-                        <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                          pregnancy.status === 'active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {pregnancy.status === 'active' ? 'En cours' : 'Terminée'}
+                        <h5 className="font-semibold text-gray-900">Suivi Grossesse</h5>
+                        <span className="text-sm text-gray-600">
+                          {new Date(suivi.dateSuivi).toLocaleDateString('fr-FR')}
                         </span>
                       </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Date de début</label>
-                          <p className="text-gray-900">{new Date(pregnancy.startDate).toLocaleDateString('fr-FR')}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Date prévue d'accouchement</label>
-                          <p className="text-gray-900">{new Date(pregnancy.expectedDueDate).toLocaleDateString('fr-FR')}</p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <h5 className="font-medium text-gray-900 mb-2">Visites de suivi</h5>
-                        {pregnancy.visits.length === 0 ? (
-                          <p className="text-gray-600 text-sm">Aucune visite enregistrée</p>
-                        ) : (
-                          <div className="space-y-2">
-                            {pregnancy.visits.map((visit) => (
-                              <div key={visit.id} className="bg-gray-50 rounded p-3">
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="font-medium">
-                                    Semaine {visit.gestationalWeek} - {new Date(visit.visitDate).toLocaleDateString('fr-FR')}
-                                  </span>
-                                  <span className="text-gray-600">Poids: {visit.weight}kg</span>
-                                </div>
-                                <p className="text-sm text-gray-600 mt-1">{visit.notes}</p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                      <p className="text-gray-900 mb-3">{suivi.details}</p>
+                      <div className="text-sm text-gray-600">
+                        <p>Consultation: {new Date(suivi.consultation.date).toLocaleDateString('fr-FR')}</p>
+                        <p>Motif: {suivi.consultation.motif}</p>
+                        <p>Médecin: Dr. {suivi.consultation.medecin.prenom} {suivi.consultation.medecin.nom}</p>
                       </div>
                     </div>
                   ))}
@@ -650,11 +764,10 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
             </div>
           )}
 
-          {activeTab === 'menstrual' && canAccessMedical && patient.gender === 'female' && (
+          {activeTab === 'menstrual' && canAccessMedical && patient.sexe === 'Féminin' && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900">Suivi du Cycle Menstruel</h3>
-              
-              {menstrualRecords.length === 0 ? (
+              {getMenstrualFollowUps.length === 0 ? (
                 <div className="text-center py-8">
                   <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">Aucun suivi menstruel</h4>
@@ -662,35 +775,22 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {menstrualRecords
-                    .sort((a, b) => new Date(b.cycleStartDate).getTime() - new Date(a.cycleStartDate).getTime())
-                    .map((record) => (
-                      <div key={record.id} className="bg-white border border-gray-200 rounded-lg p-6">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">Date de début</label>
-                            <p className="text-gray-900">{new Date(record.cycleStartDate).toLocaleDateString('fr-FR')}</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">Durée du cycle</label>
-                            <p className="text-gray-900">{record.cycleLength} jours</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-700">Régularité</label>
-                            <p className="text-gray-900">
-                              {record.cycleLength >= 21 && record.cycleLength <= 35 ? 'Normal' : 'Irrégulier'}
-                            </p>
-                          </div>
-                        </div>
-                        {record.notes && (
-                          <div className="mt-4">
-                            <label className="text-sm font-medium text-gray-700">Notes</label>
-                            <p className="text-gray-900">{record.notes}</p>
-                          </div>
-                        )}
+                  {getMenstrualFollowUps.map((suivi) => (
+                    <div key={suivi.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h5 className="font-semibold text-gray-900">Suivi Cycle</h5>
+                        <span className="text-sm text-gray-600">
+                          {new Date(suivi.dateSuivi).toLocaleDateString('fr-FR')}
+                        </span>
                       </div>
-                    ))
-                  }
+                      <p className="text-gray-900 mb-3">{suivi.details}</p>
+                      <div className="text-sm text-gray-600">
+                        <p>Consultation: {new Date(suivi.consultation.date).toLocaleDateString('fr-FR')}</p>
+                        <p>Motif: {suivi.consultation.motif}</p>
+                        <p>Médecin: Dr. {suivi.consultation.medecin.prenom} {suivi.consultation.medecin.nom}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -699,8 +799,7 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
           {activeTab === 'chronic' && canAccessMedical && (
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900">Pathologies Chroniques</h3>
-              
-              {chronicConditions.length === 0 ? (
+              {getChronicConditionFollowUps.length === 0 ? (
                 <div className="text-center py-8">
                   <Activity className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                   <h4 className="text-lg font-semibold text-gray-900 mb-2">Aucune pathologie chronique</h4>
@@ -708,39 +807,20 @@ export const PatientDetail: React.FC<PatientDetailProps> = ({ patientId, onBack 
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {chronicConditions.map((condition) => (
-                    <div key={condition.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                  {getChronicConditionFollowUps.map((suivi) => (
+                    <div key={suivi.id} className="bg-white border border-gray-200 rounded-lg p-6">
                       <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-semibold text-gray-900">{condition.condition}</h4>
-                        <span className={`px-3 py-1 text-sm font-medium rounded-full ${
-                          condition.status === 'active' 
-                            ? 'bg-red-100 text-red-800'
-                            : condition.status === 'remission'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-green-100 text-green-800'
-                        }`}>
-                          {condition.status === 'active' ? 'Actif' : 
-                           condition.status === 'remission' ? 'En rémission' : 'Guéri'}
+                        <h5 className="font-semibold text-gray-900">Suivi Pathologie Chronique</h5>
+                        <span className="text-sm text-gray-600">
+                          {new Date(suivi.dateSuivi).toLocaleDateString('fr-FR')}
                         </span>
                       </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Date de diagnostic</label>
-                          <p className="text-gray-900">{new Date(condition.diagnosisDate).toLocaleDateString('fr-FR')}</p>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Médicaments</label>
-                          <p className="text-gray-900">{condition.medications.join(', ')}</p>
-                        </div>
+                      <p className="text-gray-900 mb-3">{suivi.details}</p>
+                      <div className="text-sm text-gray-600">
+                        <p>Consultation: {new Date(suivi.consultation.date).toLocaleDateString('fr-FR')}</p>
+                        <p>Motif: {suivi.consultation.motif}</p>
+                        <p>Médecin: Dr. {suivi.consultation.medecin.prenom} {suivi.consultation.medecin.nom}</p>
                       </div>
-
-                      {condition.notes && (
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Notes</label>
-                          <p className="text-gray-900">{condition.notes}</p>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>

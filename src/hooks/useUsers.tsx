@@ -1,44 +1,44 @@
 import { useState, useEffect } from 'react';
 import { User } from '../types';
-import { mockUsers } from '../data/mockData';
+import { deleteSingleUser, getAllUsers, toggleSingleUserStatus, updateUserDetails } from '../api/ApiCenter';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulation du chargement des données
-    setTimeout(() => {
-      setUsers(mockUsers);
-      setLoading(false);
-    }, 500);
+    fetchUsers();
   }, []);
 
-  const addUser = (userData: Omit<User, 'id' | 'createdAt' | 'isActive'>) => {
-    const newUser: User = {
-      ...userData,
-      id: Date.now().toString(),
-      isActive: true,
-      createdAt: new Date().toISOString()
-    };
-    setUsers(prev => [...prev, newUser]);
-    return newUser;
-  };
+  const fetchUsers = async () => {
+    setLoading(true);
+    setUsers(await getAllUsers());
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
+  }
 
   const updateUser = (id: string, updates: Partial<User>) => {
-    setUsers(prev => prev.map(u => 
-      u.id === id ? { ...u, ...updates } : u
-    ));
+    updateUserDetails(id, updates).then(updatedUser => {
+      setUsers(prev => prev.map(u =>
+        u.id === id ? updatedUser : u
+      ));
+    })
   };
 
   const deleteUser = (id: string) => {
-    setUsers(prev => prev.filter(u => u.id !== id));
+    deleteSingleUser(id).then(async () => {
+      setUsers(await getAllUsers())
+    })
   };
 
-  const toggleUserStatus = (id: string) => {
-    setUsers(prev => prev.map(u => 
-      u.id === id ? { ...u, isActive: !u.isActive } : u
-    ));
+  const toggleUserStatus = (id: string, userStatus: boolean) => {
+    toggleSingleUserStatus(id, userStatus).then(() => {
+      setUsers(prev => prev.map(u =>
+        u.id === id ? { ...u, isActive: !u.isActive } : u
+      ));
+    })
+
   };
 
   const getUserById = (id: string) => {
@@ -48,7 +48,7 @@ export const useUsers = () => {
   return {
     users,
     loading,
-    addUser,
+    fetchUsers,
     updateUser,
     deleteUser,
     toggleUserStatus,

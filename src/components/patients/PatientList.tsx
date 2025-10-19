@@ -1,29 +1,27 @@
 import React, { useState } from 'react';
 import { usePatients } from '../../hooks/usePatients';
-import { useAuth } from '../../hooks/useAuth';
-import { 
-  Search, 
-  Plus, 
-  Eye, 
-  Edit, 
+import {
+  Search,
+  Plus,
+  Eye,
+  Edit,
   Calendar,
-  Phone,
-  Mail,
   MapPin,
-  Filter,
-  UserPlus
+  UserPlus,
+  Trash2
 } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 interface PatientListProps {
   onPatientSelect: (patientId: string) => void;
-  onAddPatient: () => void;
+  onAddPatient: (patient?: any) => void;
+  patientAppoint: (appoint?: any) => void;
 }
 
-export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAddPatient }) => {
-  const { patients, loading, searchPatients } = usePatients();
-  const { user } = useAuth();
+export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAddPatient, patientAppoint }) => {
+  const { patients, loading, searchPatients, deletePatient } = usePatients();
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterGender, setFilterGender] = useState<'all' | 'male' | 'female'>('all');
+  const [filtersexe, setFiltersexe] = useState<'all' | 'Masculin' | 'Féminin'>('all');
   const [filterAge, setFilterAge] = useState<'all' | 'minor' | 'major'>('all');
 
   const getAgeFromBirthDate = (birthDate: string) => {
@@ -40,19 +38,37 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
   const getFilteredPatients = () => {
     let filteredPatients = searchQuery ? searchPatients(searchQuery) : patients;
 
-    if (filterGender !== 'all') {
-      filteredPatients = filteredPatients.filter(p => p.gender === filterGender);
+    if (filtersexe !== 'all') {
+      filteredPatients = filteredPatients.filter(p => p.sexe === filtersexe);
     }
 
     if (filterAge !== 'all') {
       filteredPatients = filteredPatients.filter(p => {
-        const age = getAgeFromBirthDate(p.dateOfBirth);
+        const age = getAgeFromBirthDate(p.dateNaissance);
         return filterAge === 'minor' ? age < 18 : age >= 18;
       });
     }
 
-    return filteredPatients.sort((a, b) => a.lastName.localeCompare(b.lastName));
+    return filteredPatients.sort((a, b) => a.nom.localeCompare(b.nom));
   };
+
+  const handleDeletePatient = (patientId: string) => {
+    Swal.fire({
+      title: 'Êtes-vous sûr ?',
+      text: "Cette action supprimera définitivement le patient.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Oui, supprimer',
+      cancelButtonText: 'Annuler'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deletePatient(patientId);
+        Swal.fire('Supprimé !', 'Le patient a été supprimé.', 'success');
+      }
+    });
+  }
 
   if (loading) {
     return (
@@ -75,9 +91,9 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
               {filteredPatients.length} patient{filteredPatients.length > 1 ? 's' : ''} trouvé{filteredPatients.length > 1 ? 's' : ''}
             </p>
           </div>
-          
+
           <button
-            onClick={onAddPatient}
+            onClick={() => onAddPatient(null)}
             className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200"
           >
             <Plus className="h-5 w-5" />
@@ -97,17 +113,17 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
               className="w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-          
+
           <select
-            value={filterGender}
-            onChange={(e) => setFilterGender(e.target.value as 'all' | 'male' | 'female')}
+            value={filtersexe}
+            onChange={(e) => setFiltersexe(e.target.value as 'all' | 'Masculin' | 'Féminin')}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="all">Tous les genres</option>
-            <option value="male">Hommes</option>
-            <option value="female">Femmes</option>
+            <option value="Masculin">Hommes</option>
+            <option value="Féminin">Femmes</option>
           </select>
-          
+
           <select
             value={filterAge}
             onChange={(e) => setFilterAge(e.target.value as 'all' | 'minor' | 'major')}
@@ -140,29 +156,28 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
         ) : (
           <div className="divide-y divide-gray-100">
             {filteredPatients.map((patient) => {
-              const age = getAgeFromBirthDate(patient.dateOfBirth);
-              
+              const age = getAgeFromBirthDate(patient.dateNaissance);
+
               return (
                 <div
                   key={patient.id}
                   className="p-6 hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
-                  onClick={() => onPatientSelect(patient.id)}
+                  onClick={() => onPatientSelect(String(patient.id))}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${
-                        patient.gender === 'female' ? 'bg-pink-500' : 'bg-blue-500'
-                      }`}>
-                        {patient.firstName[0]}{patient.lastName[0]}
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${patient.sexe === 'Féminin' ? 'bg-pink-500' : 'bg-blue-500'
+                        }`}>
+                        {patient.prenom[0]}{patient.nom[0]}
                       </div>
-                      
+
                       <div className="flex-1">
                         <div className="flex items-center space-x-3">
                           <h3 className="text-lg font-semibold text-gray-900">
-                            {patient.firstName} {patient.lastName}
+                            {patient.prenom} {patient.nom}
                           </h3>
                           <span className="text-sm text-gray-500">
-                            ({age} ans, {patient.gender === 'male' ? 'H' : 'F'})
+                            ({age} ans, {patient.sexe === 'Masculin' ? 'H' : 'F'})
                           </span>
                           {age < 18 && (
                             <span className="inline-block px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
@@ -170,13 +185,13 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
                             </span>
                           )}
                         </div>
-                        
+
                         <p className="text-sm text-gray-600 mb-2">
-                          N° {patient.patientNumber}
+                          N° {patient.id}
                         </p>
-                        
+
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                          <div className="flex items-center space-x-1">
+                          {/* <div className="flex items-center space-x-1">
                             <Phone className="h-4 w-4" />
                             <span>{patient.phone}</span>
                           </div>
@@ -186,48 +201,57 @@ export const PatientList: React.FC<PatientListProps> = ({ onPatientSelect, onAdd
                               <Mail className="h-4 w-4" />
                               <span>{patient.email}</span>
                             </div>
-                          )}
-                          
+                          )} */}
+
                           <div className="flex items-center space-x-1">
                             <MapPin className="h-4 w-4" />
-                            <span className="truncate max-w-xs">{patient.address}</span>
+                            <span className="truncate max-w-xs">{patient.adresse}</span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          onPatientSelect(patient.id);
+                          onPatientSelect(String(patient.id));
                         }}
                         className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
                         title="Voir le détail"
                       >
                         <Eye className="h-5 w-5" />
                       </button>
-                      
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          // TODO: Implémenter l'édition
-                        }}
-                        className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
-                        title="Modifier"
-                      >
-                        <Edit className="h-5 w-5" />
-                      </button>
-                      
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          // TODO: Implémenter les rendez-vous
+                          patientAppoint({ patientId: patient.id })
                         }}
                         className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-200"
                         title="Rendez-vous"
                       >
                         <Calendar className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // onPatientSelect(String(patient.id));
+                          onAddPatient(patient)
+                        }}
+                        className="p-2 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors duration-200"
+                        title="Modifier"
+                      >
+                        <Edit className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeletePatient(String(patient.id));
+                        }}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                        title="Supprimer"
+                      >
+                        <Trash2 className="h-5 w-5" />
                       </button>
                     </div>
                   </div>

@@ -1,46 +1,45 @@
 export interface User {
   id: string;
-  username: string;
-  firstName: string;
-  lastName: string;
-  role: 'secretary' | 'nurse' | 'doctor';
+  nom: string;
+  prenom: string;
+  role: 'Secretaire' | 'Infirmiere' | 'Medecin_Chef';
   email: string;
   isActive: boolean;
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface LoginResponse {
+  email: string;
+  token: string;
+  id: number;
 }
 
 export interface RegisterUserData {
-  username: string;
   firstName: string;
   lastName: string;
-  role: 'secretary' | 'nurse' | 'doctor';
+  role: 'Secretaire' | 'Infirmiere' | 'Medecin_Chef';
   email: string;
   password: string;
 }
 
 export interface RegisterUserResponse {
-    user: User;
-    message: string;
-    token?: string;
+  user: User;
+  message: string;
+  token?: string;
 }
 
+// Dans types.ts
 export interface Patient {
-  id: string;
-  patientNumber: string;
-  firstName: string;
-  lastName: string;
-  gender: 'male' | 'female';
-  dateOfBirth: string;
-  address: string;
-  phone: string;
-  email?: string;
-  emergencyContact: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
-  createdAt: string;
-  updatedAt: string;
+  id: string | number;
+  nom: string;
+  prenom: string;
+  dateNaissance: string;
+  sexe: 'Masculin' | 'Féminin';
+  adresse?: string;
+  patientNumber?: string;
+  dateCreation: string;
+  updatedAt?: string;
 }
 
 export interface MedicalRecord {
@@ -102,14 +101,22 @@ export interface ChronicCondition {
 }
 
 export interface Appointment {
-  id: string;
-  patientId: string;
-  doctorId: string;
-  appointmentDate: string;
-  appointmentTime: string;
-  reason: string;
-  status: 'scheduled' | 'completed' | 'cancelled' | 'no-show';
-  notes?: string;
+  id: string | number;
+  patientId: string | number;
+  medecinId: string | number;
+  dateHeure: Date;
+  motif: string;
+  statut: 'PROGRAMME' | 'CONFIRME' | 'TERMINE' | 'ANNULE' | 'ABSENT';
+  notes?: string | null;
+  duree: number;
+  patient?: {
+    nom: string;
+    prenom: string;
+  };
+  medecin?: {
+    nom: string;
+    prenom: string;
+  };
 }
 
 export interface Report {
@@ -129,4 +136,192 @@ export interface Report {
   };
   generatedAt: string;
   generatedBy: string;
+}
+export enum TypeGardeEnum {
+  JOUR = 'JOUR',
+  NUIT = 'NUIT',
+  WEEK_END = 'WEEK_END'
+}
+
+export interface Garde {
+  id: number;
+  dateDebut: Date;
+  dateFin: Date;
+  medecinId: number;
+  typeGarde: TypeGardeEnum;
+  medecin?: {
+    id: number;
+    nom: string;
+    prenom: string;
+  };
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface CreateGardeData {
+  dateDebut: Date;
+  dateFin: Date;
+  medecinId: number;
+  typeGarde: TypeGardeEnum;
+}
+
+export interface UpdateGardeData {
+  dateDebut?: Date;
+  dateFin?: Date;
+  medecinId?: number;
+  typeGarde?: TypeGardeEnum;
+}
+
+export interface DossierMedical {
+  id: string;
+  patientId: string;
+  dateCreation: string;
+  creePar?: string;
+  patient?: {
+    nom: string;
+    prenom: string;
+    dateNaissance: string;
+    sexe: string;
+  };
+  utilisateurCreateur?: {
+    nom: string;
+    prenom: string;
+  };
+}
+
+export interface CreateDossierMedicalData {
+  patientId: number;
+  creePar?: string;
+}
+
+export interface UpdateDossierMedicalData {
+  patientId?: number;
+  creePar?: string;
+}
+
+export interface FichierConsultation {
+  id: number;
+  dossierId: number;
+  motifConsultation: string;
+  diagnostic: string | null;
+  prescriptions: string;
+  observations: string;
+  typeConsultation: string;
+  dateConsultation: string;
+  creePar: number;
+  utilisateurCreateur: {
+    id: number;
+    nom: string;
+    prenom: string;
+    email: string;
+    role: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
+  dossierMedical: {
+    id: number;
+    patientId: number;
+    dateCreation: string;
+    creePar: number;
+  };
+  suivisMedicaux: SuiviMedical[];
+}
+
+
+export interface CreateFichierConsultationData {
+  dossierId: number;
+  motifConsultation: string;
+  diagnostic?: string;
+  prescriptions?: string;
+  observations?: string;
+  typeConsultation: 'Nouvelle' | 'Suivi';
+  creePar?: number;
+}
+
+export interface CreateFichierConsultation {
+  patientId: string;
+  motifConsultation: string;
+  diagnostic?: string;
+  prescriptions?: string;
+  observations?: string;
+  typeConsultation: 'Nouvelle' | 'Suivi';
+  creePar?: number;
+}
+
+export interface UpdateFichierConsultationData {
+  motifConsultation?: string;
+  diagnostic?: string;
+  prescriptions?: string;
+  observations?: string;
+  typeConsultation?: 'Nouvelle' | 'Suivi';
+}
+
+export interface SuiviMedical {
+  id: number;
+  fichierConsultationId: number;
+  typeSuivi: 'Grossesse' | 'Cycle' | 'Pathologie_Chronique';
+  details?: string;
+  dateSuivi: string;
+}
+
+export interface CreateSuiviMedicalData {
+  fichierConsultationId: number;
+  typeSuivi: 'Grossesse' | 'Cycle' | 'Pathologie_Chronique';
+  details?: string;
+  dateSuivi: string;
+}
+
+export interface UpdateSuiviMedicalData {
+  typeSuivi?: 'Grossesse' | 'Cycle' | 'Pathologie_Chronique';
+  details?: string;
+  dateSuivi?: string;
+}
+
+export interface GenerateReportData {
+  type: "mensuel" | "hebdomadaire";
+  year: number;
+  month?: number;
+  week?: number;
+}
+
+export interface ReportResponse {
+  fileName: string;
+  message: string;
+}
+
+export interface DashboardData {
+  totalPatients: number;
+  totalConsultations: number;
+  newPatients: number;
+  newPatientsByDay: Array<{
+    _count: { _all: number };
+    dateCreation: string;
+  }>;
+  consultationsByDay: Array<{
+    _count: { _all: number };
+    dateConsultation: string;
+  }>;
+  recentConsultations: Array<{
+    id: number;
+    dossierId: number;
+    motifConsultation: string;
+    diagnostic: string;
+    prescriptions: string;
+    observations: string;
+    typeConsultation: string;
+    dateConsultation: string;
+    creePar: number;
+    dossierMedical: {
+      id: number;
+      patientId: number;
+      dateCreation: string;
+      creePar: number;
+      patient: {
+        nom: string;
+        prenom: string;
+      };
+    };
+  }>;
+  recentActions: any[];
 }

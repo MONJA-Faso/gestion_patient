@@ -1,5 +1,6 @@
 import React, { ReactNode, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import logo from './../../assets/img/logo.png'
 import {
   Users,
   Calendar,
@@ -9,9 +10,9 @@ import {
   LogOut,
   Stethoscope,
   User,
-  Heart,
   Menu,
   X,
+  Shield,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -30,11 +31,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
       { id: 'patients', label: 'Patients', icon: Users },
     ];
 
-    if (user?.role === 'secretary') {
-      return [...baseItems, { id: 'appointments', label: 'Rendez-vous', icon: Calendar }];
+    if (user?.role === 'Secretaire') {
+      return [...baseItems,
+      { id: 'appointments', label: 'Rendez-vous', icon: Calendar },
+      { id: 'gardes', label: 'Gardes', icon: Shield },
+      ];
     }
 
-    if (user?.role === 'nurse') {
+    if (user?.role === 'Infirmiere') {
       return [
         ...baseItems,
         { id: 'appointments', label: 'Rendez-vous', icon: Calendar },
@@ -42,13 +46,14 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
       ];
     }
 
-    if (user?.role === 'doctor') {
+    if (user?.role === 'Medecin_Chef') {
       return [
         ...baseItems,
         { id: 'appointments', label: 'Rendez-vous', icon: Calendar },
         { id: 'medical-records', label: 'Dossiers Médicaux', icon: FileText },
         { id: 'reports', label: 'Rapports', icon: BarChart3 },
         { id: 'users', label: 'Utilisateurs', icon: User },
+        { id: 'gardes', label: 'Gardes', icon: Shield },
         { id: 'settings', label: 'Paramètres', icon: Settings },
       ];
     }
@@ -88,15 +93,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
       >
         {/* Logo / Haut */}
         <div className="p-6 border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-600 rounded-lg">
-              <Heart className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">FANANTENANA</h1>
-              <p className="text-sm text-gray-500">Gestion Patients</p>
-            </div>
-          </div>
+          <picture className=''>
+            <img src={logo} alt="logo" className='w-40' />
+          </picture>
         </div>
 
         {/* Navigation scrollable */}
@@ -112,13 +111,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
                   onNavigate(item.id);
                   setSidebarOpen(false);
                 }}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-                }`}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 ${isActive
+                  ? 'bg-blue-50 text-green-600 border-r-4 border-green-500'
+                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
               >
-                <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                <Icon className={`h-5 w-5 ${isActive ? 'text-green-500' : 'text-gray-400'}`} />
                 <span className="font-medium">{item.label}</span>
               </button>
             );
@@ -130,12 +128,12 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage, onNavigat
           <div className="flex items-center space-x-3 mb-4">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
               <span className="text-white font-semibold text-sm">
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
+                {user?.nom?.[0]}{user?.prenom?.[0]}
               </span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
-                {user?.firstName} {user?.lastName}
+                {user?.nom} {user?.prenom}
               </p>
               <p className="text-xs text-gray-500 truncate">
                 {getRoleLabel(user?.role || '')}

@@ -1,10 +1,10 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User } from '../types';
-import { mockUsers } from '../data/mockData';
+import { loginUser, getMe } from '../api/ApiCenter';
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -32,32 +32,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
+    try {
 
-    // Simulation d'authentification
-    await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await loginUser(email, password);
+      localStorage.setItem('medcare_token', response.token);
 
-    const foundUser = mockUsers.find(u => u.username === username);
+      const user = await getMe(response.id, response.token);
+      localStorage.setItem('medcare_user', JSON.stringify(user));
 
-    if (foundUser && foundUser.isActive) {
-      // En production, vérifier le mot de passe hashé
-      // Pour la démo, accepter n'importe quel mot de passe non vide
-      if (password.length > 0) {
-        setUser(foundUser);
-        localStorage.setItem('medcare_user', JSON.stringify(foundUser));
-        setIsLoading(false);
-        return true;
-      }
+      console.log("Utilisateur connecté:", user.nom);
+      
+
+      setUser(user);
+      setIsLoading(false);
+      return true;
+
+    } catch (error) {
+
+      console.error("Erreur de connexion:", error);
+      setIsLoading(false);
+      return false;
+
     }
-
-    setIsLoading(false);
-    return false;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('medcare_user');
+    localStorage.removeItem('medcare_token');
   };
 
   return (

@@ -3,53 +3,53 @@ import { User, Patient, MedicalRecord, PregnancyRecord, MenstrualCycleRecord, Ch
 export const mockUsers: User[] = [
   {
     id: '1',
-    username: 'marie.RAZA',
-    firstName: 'Marie',
-    lastName: 'RAZADRASOA',
-    role: 'secretary',
+    prenom: 'Marie',
+    nom: 'RAZADRASOA',
+    role: 'Secretaire',
     email: 'marie.dupont@medcare.fr',
     isActive: true,
-    createdAt: '2024-01-15T08:00:00Z'
+    createdAt: '2024-01-15T08:00:00Z',
+    updatedAt : '2024-01-15T08:00:00Z'
   },
   {
     id: '2',
-    username: 'sophie.ZETY',
-    firstName: 'Sophie',
-    lastName: 'ZETY',
-    role: 'nurse',
+    prenom: 'Sophie',
+    nom: 'ZETY',
+    role: 'Infirmiere',
     email: 'sophie.martin@medcare.fr',
     isActive: true,
-    createdAt: '2024-01-15T08:00:00Z'
+    createdAt: '2024-01-15T08:00:00Z',
+    updatedAt : '2024-01-15T08:00:00Z'
   },
   {
     id: '3',
-    username: 'dr.MONJA',
-    firstName: 'MONJA',
-    lastName: 'Faso',
-    role: 'doctor',
+    prenom: 'MONJA',
+    nom: 'Faso',
+    role: 'Medecin_Chef',
     email: 'jean.bernard@medcare.fr',
     isActive: true,
-    createdAt: '2024-01-15T08:00:00Z'
+    createdAt: '2024-01-15T08:00:00Z',
+    updatedAt : '2024-01-15T08:00:00Z'
   },
   {
     id: '4',
-    username: 'claire.rousseau',
-    firstName: 'Claire',
-    lastName: 'Rousseau',
-    role: 'nurse',
+    prenom: 'Claire',
+    nom: 'Rousseau',
+    role: 'Infirmiere',
     email: 'claire.rousseau@medcare.fr',
     isActive: true,
-    createdAt: '2024-02-01T08:00:00Z'
+    createdAt: '2024-02-01T08:00:00Z',
+    updatedAt : '2024-01-15T08:00:00Z'
   },
   {
     id: '5',
-    username: 'dr.martinez',
-    firstName: 'Carlos',
-    lastName: 'Martinez',
-    role: 'doctor',
+    prenom: 'Carlos',
+    nom: 'Martinez',
+    role: 'Medecin_Chef',
     email: 'carlos.martinez@medcare.fr',
     isActive: true,
-    createdAt: '2024-02-10T08:00:00Z'
+    createdAt: '2024-02-10T08:00:00Z',
+    updatedAt : '2024-01-15T08:00:00Z'
   }
 ];
 
@@ -57,8 +57,8 @@ export const mockPatients: Patient[] = [
   {
     id: '1',
     patientNumber: 'PAT-2024-001',
-    firstName: 'Emma',
-    lastName: 'Moreau',
+    prenom: 'Emma',
+    nom: 'Moreau',
     gender: 'female',
     dateOfBirth: '1985-03-15',
     address: '123 Rue de la Paix, 75001 Paris',
@@ -75,8 +75,8 @@ export const mockPatients: Patient[] = [
   {
     id: '2',
     patientNumber: 'PAT-2024-002',
-    firstName: 'Lucas',
-    lastName: 'Dubois',
+    prenom: 'Lucas',
+    nom: 'Dubois',
     gender: 'male',
     dateOfBirth: '1992-07-22',
     address: '45 Avenue des Champs, 69001 Lyon',
@@ -92,8 +92,8 @@ export const mockPatients: Patient[] = [
   {
     id: '3',
     patientNumber: 'PAT-2024-003',
-    firstName: 'Camille',
-    lastName: 'Rousseau',
+    prenom: 'Camille',
+    nom: 'Rousseau',
     gender: 'female',
     dateOfBirth: '1978-11-08',
     address: '78 Boulevard Saint-Michel, 33000 Bordeaux',
@@ -109,8 +109,8 @@ export const mockPatients: Patient[] = [
   {
     id: '4',
     patientNumber: 'PAT-2024-004',
-    firstName: 'Antoine',
-    lastName: 'Leroy',
+    prenom: 'Antoine',
+    nom: 'Leroy',
     gender: 'male',
     dateOfBirth: '2010-05-12',
     address: '12 Rue Victor Hugo, 59000 Lille',
@@ -126,8 +126,8 @@ export const mockPatients: Patient[] = [
   {
     id: '5',
     patientNumber: 'PAT-2024-005',
-    firstName: 'Isabelle',
-    lastName: 'Durand',
+    prenom: 'Isabelle',
+    nom: 'Durand',
     gender: 'female',
     dateOfBirth: '1995-09-18',
     address: '89 Rue de la République, 13000 Marseille',

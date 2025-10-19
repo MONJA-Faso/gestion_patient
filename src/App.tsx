@@ -11,14 +11,62 @@ import { AppointmentManagement } from './components/appointments/AppointmentMana
 import { UserManagement } from './components/users/UserManagement';
 import { ReportsManagement } from './components/reports/ReportsManagement';
 import { Settings } from './components/settings/Settings';
+import { Appointment } from './types';
+import { GardeManagement } from './components/gardes/Gardes';
+import MedRecords from './components/medicalRecords/MedRecords';
+import { useConsultations } from './hooks/useConsultations';
+// import { getDashboardInfo } from './api/ApiCenter';
+// import Swal from 'sweetalert2';
 
 const AppContent: React.FC = () => {
   const { user, isLoading } = useAuth();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<any | null>(null);
   const [showAddPatient, setShowAddPatient] = useState(false);
+  const [patientAppointment, setPatientAppointment] = useState<any | null>(null)
+  const [detailOnglet, setDetailOnglet] = useState('overview');
 
+  const { consultations, fetchConsultations } = useConsultations();
   const [isRegister, setIsRegister] = useState(false);
+
+
+  // const fetchAlldossiers = async () => {
+  //   try {
+  //     setDossiers(await getAllDossierMedicals())
+  //   } catch (error: any) {
+  //     console.error("Erreur lors de la récupération des dossiers médicaux : ", error);
+  //   }
+  // }
+  // const verifyToken = async () => {
+  //   try {
+  //     getDashboardInfo()
+  //   } catch (error: any) {
+  //     if (error.response) {
+  //       await Swal.fire({
+  //         icon: 'error',
+  //         title: 'Erreur',
+  //         text: error.response?.data.error,
+  //         confirmButtonText: 'OK',
+  //         confirmButtonColor: '#d33'
+  //       });
+  //       return;
+  //     }else {
+  //       Swal.fire({
+  //         icon: 'error',
+  //         title: 'Erreur',
+  //         text: "Token expiré; Veuillew vous reconnecter !",
+  //         confirmButtonText: 'OK',
+  //         confirmButtonColor: '#d33'
+  //       });
+  //     }
+  //   }
+  // }
+
+  // useEffect(() => {
+  //   console.log("Info dashboard : ", getDashboardInfo());
+  //   verifyToken();
+  // }, [])
 
   if (isLoading) {
     return (
@@ -33,7 +81,7 @@ const AppContent: React.FC = () => {
 
   if (!user) {
     if (!isRegister) {
-      return <LoginForm isRegister={isRegister} setIsRegister={setIsRegister}/>;
+      return <LoginForm isRegister={isRegister} setIsRegister={setIsRegister} />;
     } else {
       return <RegisterForm isRegister={isRegister} setIsRegister={setIsRegister} />;
     }
@@ -41,18 +89,24 @@ const AppContent: React.FC = () => {
 
   const handlePatientSelect = (patientId: string) => {
     setSelectedPatientId(patientId);
+    setDetailOnglet('overview');
     setCurrentPage('patient-detail');
   };
 
-  const handleAddPatient = () => {
+  const handlePatientMedSelect = (patientId: string) => {
+    setSelectedPatientId(patientId);
+    setDetailOnglet('medical');
+    setCurrentPage('patient-detail');
+  };
+
+  const handleAddPatient = (patient?: any) => {
+    if (patient) {
+      setSelectedPatient(patient);
+    } else {
+      setSelectedPatient(null);
+    }
     setShowAddPatient(true);
     setCurrentPage('add-patient');
-  };
-
-  const handlePatientAdded = (patientId: string) => {
-    setShowAddPatient(false);
-    setSelectedPatientId(patientId);
-    setCurrentPage('patient-detail');
   };
 
   const handleBackToPatients = () => {
@@ -61,12 +115,24 @@ const AppContent: React.FC = () => {
     setCurrentPage('patients');
   };
 
+  const handleCreateAppointWithPatient = (appoint?: Partial<Appointment>) => {
+    setPatientAppointment(appoint)
+    setCurrentPage("appointments")
+  }
+
+  const handleAppointmentPatientUsed = () => {
+    setPatientAppointment(null);
+  }
+
   const renderPageContent = () => {
     if (currentPage === 'patient-detail' && selectedPatientId) {
       return (
         <PatientDetail
           patientId={selectedPatientId}
           onBack={handleBackToPatients}
+          currentTab={detailOnglet}
+          consultations={consultations}
+          onConsultationsUpdate={fetchConsultations}
         />
       );
     }
@@ -75,7 +141,8 @@ const AppContent: React.FC = () => {
       return (
         <AddPatientForm
           onBack={handleBackToPatients}
-          onPatientAdded={handlePatientAdded}
+          onPatientAdded={handleBackToPatients}
+          patientInfo={selectedPatient}
         />
       );
     }
@@ -86,19 +153,17 @@ const AppContent: React.FC = () => {
           <PatientList
             onPatientSelect={handlePatientSelect}
             onAddPatient={handleAddPatient}
+            patientAppoint={handleCreateAppointWithPatient}
           />
         );
       case 'appointments':
-        return <AppointmentManagement />;
+        return <AppointmentManagement patientAppointment={patientAppointment} freePatientID={handleAppointmentPatientUsed} />;
       case 'medical-records':
-        return (
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Dossiers Médicaux</h2>
-            <p className="text-gray-600">Vue générale des dossiers médicaux accessible via les détails des patients.</p>
-          </div>
-        );
+        return <MedRecords onPatientSelect={handlePatientMedSelect} />
       case 'reports':
         return <ReportsManagement />;
+      case 'gardes':
+        return <GardeManagement />
       case 'users':
         return <UserManagement />;
       case 'settings':
