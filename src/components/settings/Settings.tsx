@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { changePassword } from '../../api/ApiCenter';
+import { changePassword, updateUserDetails } from '../../api/ApiCenter';
 import Swal from 'sweetalert2';
 import {
   Settings as SettingsIcon,
@@ -13,19 +13,18 @@ import {
 } from 'lucide-react';
 
 export const Settings: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [profileData, setProfileData] = useState({
-    firstName: user?.nom || '',
-    lastName: user?.prenom || '',
-    email: user?.email || '',
-    phone: '',
-    address: ''
+    firstName: '',
+    lastName: '',
+    email: ''
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -34,10 +33,60 @@ export const Settings: React.FC = () => {
     confirmPassword: ''
   });
 
-  const handleSaveProfile = () => {
-    // Simulation de sauvegarde
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  // Initialiser les données du profil avec les informations de l'utilisateur
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        firstName: user.prenom || '',
+        lastName: user.nom || '',
+        email: user.email || ''
+      });
+    }
+  }, [user]);
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    
+    try {
+      const updates = {
+        nom: profileData.lastName,
+        prenom: profileData.firstName,
+        email: profileData.email
+      };
+
+      const updatedUser = await updateUserDetails(user.id, updates);
+      
+      // Mettre à jour le contexte d'authentification
+      updateUser(updatedUser);
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Succès',
+        text: 'Profil mis à jour avec succès',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#3085d6',
+        timer: 3000,
+        timerProgressBar: true
+      });
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+      
+    } catch (error: any) {
+      console.error('Erreur lors de la mise à jour du profil:', error);
+      
+      await Swal.fire({
+        icon: 'error',
+        title: 'Erreur',
+        text: error.response?.data?.message || 'Erreur lors de la mise à jour du profil',
+        confirmButtonText: 'OK',
+        confirmButtonColor: '#d33'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChangePassword = async () => {
@@ -63,6 +112,8 @@ export const Settings: React.FC = () => {
       return;
     }
 
+    setLoading(true);
+
     try {
       const response = await changePassword(user!.id, passwordData.currentPassword, passwordData.newPassword);
       console.log("Password change response:", response);
@@ -77,30 +128,35 @@ export const Settings: React.FC = () => {
         timerProgressBar: true
       });
 
+      setSaved(true);
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      setTimeout(() => setSaved(false), 5000);
+      
     } catch (error: any) {
       if (error.response) {
-
         await Swal.fire({
           icon: 'error',
           title: 'Erreur',
-          text: error.response?.data.error,
+          text: error.response?.data.error || 'Erreur lors du changement de mot de passe',
           confirmButtonText: 'OK',
           confirmButtonColor: '#d33'
         });
-        return;
-
       } else {
-        throw new Error('Erreur de connexion');
+        await Swal.fire({
+          icon: 'error',
+          title: 'Erreur de connexion',
+          text: 'Veuillez vérifier votre connexion internet',
+          confirmButtonText: 'OK',
+          confirmButtonColor: '#d33'
+        });
       }
+    } finally {
+      setLoading(false);
     }
-
-    setSaved(true);
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
-    setTimeout(() => setSaved(false), 5000);
   };
 
   const tabs = [
@@ -174,6 +230,7 @@ export const Settings: React.FC = () => {
                       value={profileData.firstName}
                       onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Votre prénom"
                     />
                   </div>
 
@@ -186,10 +243,11 @@ export const Settings: React.FC = () => {
                       value={profileData.lastName}
                       onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Votre nom"
                     />
                   </div>
 
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Email
                     </label>
@@ -198,32 +256,7 @@ export const Settings: React.FC = () => {
                       value={profileData.email}
                       onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Téléphone
-                    </label>
-                    <input
-                      type="tel"
-                      value={profileData.phone}
-                      onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="01 23 45 67 89"
-                    />
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Adresse
-                    </label>
-                    <textarea
-                      value={profileData.address}
-                      onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      rows={3}
-                      placeholder="Adresse complète"
+                      placeholder="votre@email.com"
                     />
                   </div>
                 </div>
@@ -231,10 +264,15 @@ export const Settings: React.FC = () => {
                 <div className="flex justify-end">
                   <button
                     onClick={handleSaveProfile}
-                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200"
+                    disabled={loading}
+                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg transition-colors duration-200"
                   >
-                    <Save className="h-5 w-5" />
-                    <span>Sauvegarder</span>
+                    {loading ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    ) : (
+                      <Save className="h-5 w-5" />
+                    )}
+                    <span>{loading ? 'Sauvegarde...' : 'Sauvegarder'}</span>
                   </button>
                 </div>
               </div>
@@ -255,6 +293,7 @@ export const Settings: React.FC = () => {
                         value={passwordData.currentPassword}
                         onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                         className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Entrez votre mot de passe actuel"
                       />
                       <button
                         type="button"
@@ -276,6 +315,7 @@ export const Settings: React.FC = () => {
                         value={passwordData.newPassword}
                         onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                         className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Entrez votre nouveau mot de passe"
                       />
                       <button
                         type="button"
@@ -297,6 +337,7 @@ export const Settings: React.FC = () => {
                         value={passwordData.confirmPassword}
                         onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                         className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Confirmez votre nouveau mot de passe"
                       />
                       <button
                         type="button"
@@ -312,10 +353,15 @@ export const Settings: React.FC = () => {
                 <div className="flex justify-end">
                   <button
                     onClick={handleChangePassword}
-                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200"
+                    disabled={loading}
+                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-3 rounded-lg transition-colors duration-200"
                   >
-                    <Lock className="h-5 w-5" />
-                    <span>Changer le mot de passe</span>
+                    {loading ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    ) : (
+                      <Lock className="h-5 w-5" />
+                    )}
+                    <span>{loading ? 'Changement...' : 'Changer le mot de passe'}</span>
                   </button>
                 </div>
               </div>

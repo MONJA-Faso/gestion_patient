@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  updateUser: (updatedUser: User) => void;
   isLoading: boolean;
 }
 
@@ -35,7 +36,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-
       const response = await loginUser(email, password);
       localStorage.setItem('medcare_token', response.token);
 
@@ -43,18 +43,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('medcare_user', JSON.stringify(user));
 
       console.log("Utilisateur connecté:", user.nom);
-      
 
       setUser(user);
       setIsLoading(false);
       return true;
 
     } catch (error) {
-
       console.error("Erreur de connexion:", error);
       setIsLoading(false);
       return false;
-
     }
   };
 
@@ -64,8 +61,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('medcare_token');
   };
 
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+    localStorage.setItem('medcare_user', JSON.stringify(updatedUser));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
